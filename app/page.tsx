@@ -1,13 +1,3 @@
-/**
- * Mrror - A Daily Accountability App
- * 
- * This is a client-side component that asks two reflective questions:
- * 1. "What does a day in the life of the person you want to become look like?"
- * 2. "Did you lie to yourself today?" (yes/no)
- * 
- * Responses are saved in browser's localStorage with timestamps.
- */
-
 // Mark this as a client component since we're using hooks and localStorage
 'use client';
 
