@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import StatusBar from './StatusBar';
+import StatusBar from '@/app/components/StatusBar';
 
 interface TerminalLayoutProps {
   children: React.ReactNode;

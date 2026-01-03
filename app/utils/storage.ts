@@ -6,15 +6,16 @@
 
 export interface DailyRecord {
   timestamp: string;           // ISO timestamp when record was created
+  missionSuccess: boolean;     // Did you honor your promise to yourself?
+  timeWasted: number;          // hours surrendered to distraction (0-16)
+  excuseLog: string;           // What excuse won when discipline slipped?
   impulseControl: number;      // 0-10 self-rating
   focusConsistency: number;    // 0-10 self-rating
   emotionalStability: number;  // 0-10 self-rating
-  timeWasted: number;          // hours spent on non-priority activities
   systemIntegrity: number;     // calculated percentage
   rotIndex: number;            // calculated percentage (time wasted ratio)
-  missionDebrief: string;      // reflection on previous day's key decision
-  tomorrowObjective: string;   // primary goal for next 24 hours
-  executionWindow: string;     // time block for executing objective (e.g., "6AM–10AM")
+  tomorrowObjective: string;   // today's prime objective
+  executionWindow: string;     // execution window (Morning/Afternoon/Evening)
 }
 
 const STORAGE_KEY = 'mrror-records';

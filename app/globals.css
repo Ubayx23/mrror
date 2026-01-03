@@ -1,30 +1,20 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  --true-black: #0A0A0A;
+  --steel-gray: #1B1F23;
+  --cyber-cyan: #00E0FF;
+  --electric-blue: #007CFF;
+  --warning-red: #FF3B3B;
+  --tactical-amber: #FFB800;
+  --subtext-gray: #9CA3AF;
+  --soft-white: #E6E6E6;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-}
-
-/* Custom fade-in animation for success messages */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
+  background: var(--true-black);
+  color: var(--soft-white);
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
 }
 
 /* CRT scanlines animation */
@@ -41,9 +31,87 @@ body {
   animation: scanlines 8s linear infinite;
 }
 
+/* Cyan glow effect */
+.glow-cyan {
+  text-shadow: 0 0 8px var(--cyber-cyan), 0 0 20px #00A3FF;
+}
+
+/* Red warning glow */
+.glow-red {
+  text-shadow: 0 0 8px var(--warning-red), 0 0 18px #9A0000;
+}
+
+/* Flicker animation for warnings */
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+  75% { opacity: 0.95; }
+}
+
+.animate-flicker {
+  animation: flicker 0.3s ease-in-out 3;
+}
+
+/* Glitch effect for critical states */
+@keyframes glitch {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-2px); }
+  40% { transform: translateX(2px); }
+  60% { transform: translateX(-1px); }
+  80% { transform: translateX(1px); }
+  100% { transform: translateX(0); }
+}
+
+.animate-glitch {
+  animation: glitch 0.2s ease-in-out 2;
+}
+
+/* Typewriter cursor */
+.cursor-blink {
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
 /* Terminal monospace font */
 .font-mono {
-  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-family: 'JetBrains Mono', 'VT323', 'Courier New', monospace;
   letter-spacing: 0.02em;
+}
+
+/* Glass panel effect */
+.glass-panel {
+  background: rgba(27, 31, 35, 0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 224, 255, 0.2);
+}
+
+/* Input cyber styling */
+.input-cyber {
+  background: var(--true-black);
+  border: 1px solid rgba(0, 224, 255, 0.4);
+  color: var(--cyber-cyan);
+  transition: all 0.3s ease;
+}
+
+.input-cyber:focus {
+  border-color: var(--cyber-cyan);
+  box-shadow: 0 0 10px rgba(0, 224, 255, 0.3);
+  outline: none;
+}
+
+/* Vignette overlay */
+.vignette {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 0%, rgba(10, 10, 10, 0.7) 100%);
+  z-index: 100;
 }
 

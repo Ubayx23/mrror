@@ -10,11 +10,9 @@ export default function BootScreen({ onComplete }: BootScreenProps) {
   const [displayText, setDisplayText] = useState('');
   
   const bootMessages = useMemo(() => [
-    'MRROR OS v1.0 INITIALIZING...',
-    'LOADING SYSTEM DIAGNOSTICS...',
-    'ESTABLISHING SECURE CONNECTION...',
-    'INITIALIZING REFLECTION PROTOCOL...',
-    'SYSTEM READY.',
+    '> Initializing MRROR OS...',
+    '> Retrieving psychological telemetry from previous day...',
+    '> SYSTEM READY FOR DAILY AUDIT.',
   ], []);
 
   useEffect(() => {
@@ -63,10 +61,10 @@ export default function BootScreen({ onComplete }: BootScreenProps) {
 
       {/* Boot screen content */}
       <div className="relative z-10 text-center">
-        <div className="text-cyan-400 font-mono text-sm sm:text-base leading-relaxed whitespace-pre-wrap max-w-2xl mx-auto px-6">
+        <div className="text-[#00E0FF] glow-cyan font-mono text-sm sm:text-base leading-relaxed whitespace-pre-wrap max-w-2xl mx-auto px-6">
           {displayText}
-          {displayText.length < bootMessages.join('\n').length + 5 && (
-            <span className="animate-pulse text-cyan-300">▮</span>
+          {displayText.length < bootMessages.join('\n').length + 3 && (
+            <span className="cursor-blink text-[#00E0FF]">▮</span>
           )}
         </div>
       </div>
@@ -74,9 +72,12 @@ export default function BootScreen({ onComplete }: BootScreenProps) {
       {/* Glow effect behind text */}
       <div className="absolute inset-0 pointer-events-none" 
            style={{
-             background: 'radial-gradient(ellipse at center, rgba(0, 255, 255, 0.05) 0%, transparent 70%)',
+             background: 'radial-gradient(ellipse at center, rgba(0, 224, 255, 0.08) 0%, transparent 70%)',
            }}>
       </div>
+      
+      {/* Vignette */}
+      <div className="vignette"></div>
     </div>
   );
 }
