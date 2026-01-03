@@ -29,21 +29,17 @@ export default function Home() {
   const [saved, setSaved] = useState(false);
   
   // State to hold the history of past responses
-  const [history, setHistory] = useState<Response[]>([]);
-
-  // Load saved responses on the client only (avoids localStorage on server)
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const storedResponses = window.localStorage.getItem('mrror-responses');
-    if (!storedResponses) return;
-
-    try {
-      setHistory(JSON.parse(storedResponses));
-    } catch (error) {
-      console.error('Error parsing stored responses:', error);
-    }
-  }, []);
+ const [history, setHistory] = useState<Response[]>(() => {
+  if (typeof window === 'undefined') return [];
+  const storedResponses = window.localStorage.getItem('mrror-responses');
+  if (!storedResponses) return [];
+  try {
+    return JSON.parse(storedResponses);
+  } catch (error) {
+    console.error('Error parsing stored responses:', error);
+    return [];
+  }
+});
 
   /**
    * Handle form submission
