@@ -29,29 +29,17 @@ export default function Home() {
   const [saved, setSaved] = useState(false);
   
   // State to hold the history of past responses
-  const [history, setHistory] = useState<Response[]>([]);
-
-  /**
-   * Load saved responses from localStorage when component mounts
-   * This runs once when the page loads
-   * 
-   * Note: Setting state here is intentional and safe - we're initializing state
-   * from localStorage on mount, which is a common pattern for data persistence.
-   */
-  useEffect(() => {
-    // Get the stored responses from localStorage
-    const storedResponses = localStorage.getItem('mrror-responses');
-    
-    // If responses exist, parse them from JSON and update state
-    if (storedResponses) {
-      try {
-        const parsed = JSON.parse(storedResponses);
-        setHistory(parsed);
-      } catch (error) {
-        console.error('Error parsing stored responses:', error);
-      }
-    }
-  }, []); // Empty dependency array means this runs once on mount
+ const [history, setHistory] = useState<Response[]>(() => {
+  if (typeof window === 'undefined') return [];
+  const storedResponses = window.localStorage.getItem('mrror-responses');
+  if (!storedResponses) return [];
+  try {
+    return JSON.parse(storedResponses);
+  } catch (error) {
+    console.error('Error parsing stored responses:', error);
+    return [];
+  }
+});
 
   /**
    * Handle form submission
@@ -78,7 +66,9 @@ export default function Home() {
     const updatedHistory = [newResponse, ...history];
     
     // Save the updated history to localStorage as JSON
-    localStorage.setItem('mrror-responses', JSON.stringify(updatedHistory));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('mrror-responses', JSON.stringify(updatedHistory));
+    }
     
     // Update the state with the new history
     setHistory(updatedHistory);
