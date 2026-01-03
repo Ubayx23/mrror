@@ -34,6 +34,9 @@ export default function Home() {
   /**
    * Load saved responses from localStorage when component mounts
    * This runs once when the page loads
+   * 
+   * Note: Setting state here is intentional and safe - we're initializing state
+   * from localStorage on mount, which is a common pattern for data persistence.
    */
   useEffect(() => {
     // Get the stored responses from localStorage
@@ -86,10 +89,19 @@ export default function Home() {
     // Reset the form fields
     setDayVision('');
     setLiedToSelf(null);
-    
-    // Hide success message after 3 seconds
-    setTimeout(() => setSaved(false), 3000);
   };
+
+  /**
+   * Hide the success message after 3 seconds
+   * Uses useEffect to handle cleanup properly
+   */
+  useEffect(() => {
+    if (saved) {
+      const timer = setTimeout(() => setSaved(false), 3000);
+      // Cleanup function: clear timeout if component unmounts or saved changes
+      return () => clearTimeout(timer);
+    }
+  }, [saved]); // Re-run effect when saved state changes
 
   /**
    * Format a timestamp into a readable date and time string
