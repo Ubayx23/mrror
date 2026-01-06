@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Mrror - Daily Accountability",
-  description: "A simple accountability tool keeping you aligned",
+  title: "mrror - Focus Dashboard",
+  description: "A calm, intentional focus workspace",
 };
 
 export default function RootLayout({

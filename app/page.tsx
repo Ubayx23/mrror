@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import BootScreen from '@/app/components/BootScreen';
-import DashboardShell from '@/app/components/DashboardShell';
+import HomeScreen from '@/app/components/HomeScreen';
 
-const BOOT_DELAY_MS = 1300; // brief loading pause before showing the dashboard shell
+const BOOT_DELAY_MS = 1300;
 
 export default function Home() {
   const [isBooting, setIsBooting] = useState(true);
@@ -16,5 +16,5 @@ export default function Home() {
 
   if (isBooting) return <BootScreen />;
 
-  return <DashboardShell />;
+  return <HomeScreen />;
 }

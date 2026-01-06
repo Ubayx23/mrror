@@ -1,22 +1,29 @@
 # mrror
 
-Phase 2: a lean home workspace. Boot screen → welcome header → actionable surface with a focus timer and a local task list. No streaks, metrics, or onboarding questions.
+Phase 3 (continued): intent-first execution surface. Boot → one-line journal prompt → active task + timer → progress. Top navigation links to Home (active), Tasks, Journal, Goals, Projects (placeholders).
 
 ---
 
 ## What You See
 
-- Brief boot/loading view (~1–2s) with “Initializing mrror…”.
-- Home header: “Welcome back” plus a short reminder of why this exists.
-- Focus timer (25 minutes by default): start, pause, reset. One timer at a time.
-- Tasks: add, mark complete, delete. Flat list only. Stored in localStorage.
-- Sidebar placeholders for Notes, Journal, Goals, Learning (coming soon).
+- Brief boot/loading view (~1–2s) with "Initializing mrror…".
+- **Top navigation bar** with:
+  - App name (left)
+  - Links: Home (active), Tasks, Journal, Goals, Projects (others are "coming soon" placeholders)
+  - Minutes focused today (right)
+- **Home screen layout** (in order of importance):
+  1. **Journal intent input** — "What are you working on right now, and why does it matter?" (one-liner, stores locally)
+  2. **Active task card** — Task name, duration, timer with start/pause/done buttons
+  3. **Progress indicator** — Minutes focused today (shown in top nav)
+  4. **Task selector** — Modal for picking/creating a task and setting duration before starting
 
-## What Is Gone Forever
+## Core Mechanics
 
-- The interrogation/question flow (Q1–Q5) and state machine routing.
-- Metrics dashboards, streaks, charts, and CRT theming.
-- Any notion of onboarding questions or gamified flows.
+- **Intent before execution** — User sets intention before starting any work.
+- **One active task at a time** — Focus on one thing.
+- **Task & duration binding** — No timer without a task and chosen duration.
+- **Earned progress only** — Minutes today = completed sessions, reset at midnight.
+- **Clean, calm design** — Black & white, minimal friction, professional feel.
 
 ---
 
@@ -30,22 +37,30 @@ Phase 2: a lean home workspace. Boot screen → welcome header → actionable su
 | Tailwind CSS | 4.x | Styling |
 | ESLint | 9.x | Linting |
 
-No backend; everything runs client-side. Data is per-browser via localStorage.
+Client-side only. localStorage for tasks, sessions, intent, state.
 
 ---
 
 ## Key Files
 
-- [app/page.tsx](app/page.tsx) — Boot delay, then renders the home workspace.
-- [app/components/BootScreen.tsx](app/components/BootScreen.tsx) — Minimal loader.
-- [app/components/DashboardShell.tsx](app/components/DashboardShell.tsx) — Layout for header, timer, tasks, and placeholders.
-- [app/components/FocusTimer.tsx](app/components/FocusTimer.tsx) — Start/pause/reset focus timer (25m default).
-- [app/components/TasksPanel.tsx](app/components/TasksPanel.tsx) — LocalStorage task list (add/complete/delete).
-- [app/layout.tsx](app/layout.tsx) — Root layout and metadata.
-- [app/globals.css](app/globals.css) — Neutral base styling.
-- [app/utils/storage.ts](app/utils/storage.ts) and [app/utils/SystemMetrics.ts](app/utils/SystemMetrics.ts) — Legacy utilities kept but unused.
+**New in Phase 3 (continued):**
+- [app/components/TopNav.tsx](app/components/TopNav.tsx) — Navigation bar with links and daily progress.
+- [app/components/JournalIntentInput.tsx](app/components/JournalIntentInput.tsx) — One-line intent prompt.
+- [app/utils/intent.ts](app/utils/intent.ts) — Store and load journal intent locally.
 
-Legacy components still present but unused: [app/components/DailyDiagnostic.tsx](app/components/DailyDiagnostic.tsx), [app/components/MissionDebrief.tsx](app/components/MissionDebrief.tsx), [app/components/StatusBar.tsx](app/components/StatusBar.tsx), [app/components/TomorrowDirective.tsx](app/components/TomorrowDirective.tsx).
+**From Phase 3 (initial):**
+- [app/components/HomeScreen.tsx](app/components/HomeScreen.tsx) — Refactored to use TopNav and JournalIntentInput.
+- [app/components/ActiveTaskCard.tsx](app/components/ActiveTaskCard.tsx) — Centerpiece card with task + timer.
+- [app/components/TaskSelector.tsx](app/components/TaskSelector.tsx) — Modal for picking/creating task + setting duration.
+- [app/components/AllTasksList.tsx](app/components/AllTasksList.tsx) — Modal showing all tasks.
+- [app/utils/sessions.ts](app/utils/sessions.ts) — Track completed focus sessions and calculate daily minutes.
+
+**Existing (updated):**
+- [app/page.tsx](app/page.tsx) — Renders HomeScreen after boot.
+
+**Legacy (dormant):**
+- [app/components/IconPanel.tsx](app/components/IconPanel.tsx), [app/components/DashboardShell.tsx](app/components/DashboardShell.tsx), [app/components/FocusTimer.tsx](app/components/FocusTimer.tsx), [app/components/TasksPanel.tsx](app/components/TasksPanel.tsx) — From Phase 2, no longer used.
+- [app/utils/storage.ts](app/utils/storage.ts), [app/utils/SystemMetrics.ts](app/utils/SystemMetrics.ts) — Original utilities, not used.
 
 ---
 
@@ -61,14 +76,48 @@ npm run lint     # lint
 
 ---
 
-## Notes for Future Work
+## Data Structures
 
-- Keep UI calm and minimal; add features only when they serve daily use.
-- If data structures evolve, refactor cleanly and retire unused utilities.
-- Upcoming ideas: flesh out Notes/Journal/Goals/Learning once core workflow feels solid.
+**Tasks** (localStorage key: `mrror-tasks-v1`):
+```json
+[
+  { "id": "uuid", "title": "Task name" }
+]
+```
+
+**Sessions** (localStorage key: `mrror-sessions-v1`):
+```json
+[
+  {
+    "id": "uuid",
+    "taskId": "uuid",
+    "taskName": "Task name",
+    "durationSeconds": 1500,
+    "completedAt": "2025-01-06T10:30:00Z"
+  }
+]
+```
+
+**Intent** (localStorage key: `mrror-intent-v1`):
+```json
+{
+  "id": "uuid",
+  "text": "Build the focus timer and make it feel good",
+  "createdAt": "2025-01-06T10:30:00Z"
+}
+```
+
+---
+
+## Next (Phase 4 ideas)
+
+- Build out Journal, Goals, Projects tabs with simple input/display.
+- Session history and retrospectives (optional).
+- Daily wrap-up prompt.
+- Mobile app or PWA.
 
 ---
 
 ## One-Line Context for AI
 
-Mrror is now a minimalist Next.js home workspace with a short boot screen, a welcome header, a 25-minute focus timer, and a localStorage-backed flat task list; legacy interrogation/metrics code is removed or dormant.
+Mrror is a minimal, intention-first execution surface: set your intent, pick a task, start the timer, watch the focus minutes accumulate—everything else is intentionally deferred.

@@ -3,29 +3,21 @@
 :root {
   --true-black: #0A0A0A;
   --steel-gray: #1B1F23;
-  --cyber-cyan: #00E0FF;
-  --electric-blue: #007CFF;
-  --warning-red: #FF3B3B;
-  --tactical-amber: #FFB800;
-  --subtext-gray: #9CA3AF;
-  --soft-white: #E6E6E6;
+  --emerald: #10b981;
+  --emerald-dark: #059669;
+  --neutral-950: #0a0a0a;
+  --neutral-900: #171717;
+  --neutral-800: #262626;
+  --neutral-700: #404040;
 }
 
 body {
-  background: #f9fafb;
-  color: #0f172a;
+  background: var(--neutral-950);
+  color: #ffffff;
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
   line-height: 1.6;
-}
-
-/* CRT scanlines animation */
-@keyframes scanlines {
-  0% {
-    transform: translateY(0);
-  }
-  100% {
-    transform: translateY(10px);
-  }
+  margin: 0;
+  padding: 0;
 }
 
 .animate-scanlines {
