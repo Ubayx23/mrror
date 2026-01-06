@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { DailyPromise } from '@/app/utils/storage';
 import { DashboardCard } from './DashboardGrid';
 
 const NOTES_STORAGE_KEY = 'mrror-notes-v1';
@@ -23,11 +24,20 @@ function saveNotes(text: string) {
   }
 }
 
+interface NotesPanelProps {
+  showPrompt?: 'idle' | 'waiting' | 'active' | 'reflection';
+  promise?: DailyPromise | null;
+}
+
 /**
- * Dedicated journal panel - thinking space while working
- * Auto-saves, always visible, equal importance to timer
+ * Phase 6: Reflection Journal
+ * Dynamic prompt based on promise state
+ * Idle: Waiting for promise
+ * Waiting: Promise committed but timer hasn't started
+ * Active: Timer is running
+ * Reflection: After promise is resolved (kept or broken)
  */
-export default function NotesPanel() {
+export default function NotesPanel({ showPrompt = 'idle', promise }: NotesPanelProps) {
   const [notes, setNotes] = useState(() => loadNotes());
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
@@ -45,12 +55,28 @@ export default function NotesPanel() {
     setNotes(e.target.value);
   }, []);
 
+  const getPromptText = () => {
+    switch (showPrompt) {
+      case 'active':
+        return 'How is the work going?';
+      case 'waiting':
+        return 'What will you prove today?';
+      case 'reflection':
+        return promise?.state === 'completed' 
+          ? 'What did you learn from keeping your word?' 
+          : 'What happened? What would have helped?';
+      case 'idle':
+      default:
+        return 'Reflection space. Make a statement to begin.';
+    }
+  };
+
   return (
     <DashboardCard>
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-medium text-neutral-400 uppercase tracking-wide">
-            Journal
+            Reflection
           </h3>
           {lastSaved && (
             <span className="text-xs text-neutral-600">
@@ -59,16 +85,21 @@ export default function NotesPanel() {
           )}
         </div>
         
+        <p className="text-xs text-neutral-500 italic">
+          {getPromptText()}
+        </p>
+
         <textarea
           value={notes}
           onChange={handleChange}
-          placeholder="What are you thinking about? What problems are you solving?"
-          rows={10}
-          className="w-full px-3 py-2 bg-neutral-800/50 border border-neutral-700 rounded-lg text-sm text-neutral-200 placeholder-neutral-600 focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none leading-relaxed"
+          placeholder="Your thoughts…"
+          rows={8}
+          disabled={showPrompt === 'idle'}
+          className="w-full px-3 py-2 bg-neutral-800/50 border border-neutral-700 rounded-lg text-sm text-neutral-200 placeholder-neutral-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none leading-relaxed disabled:opacity-50 disabled:cursor-not-allowed"
         />
         
         <p className="text-xs text-neutral-600">
-          Thinking space. Auto-saves as you type.
+          Auto-saves as you type.
         </p>
       </div>
     </DashboardCard>

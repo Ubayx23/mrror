@@ -7,8 +7,9 @@ interface DashboardGridProps {
 }
 
 /**
- * Phase 4: Card-based dashboard grid
- * Center content area with consistent card styling
+ * Phase 6: Promise-centric grid layout
+ * Better spatial balance, 2-column layout when possible
+ * Tighter padding for improved focus
  */
 export default function DashboardGrid({ children }: DashboardGridProps) {
   const now = new Date();
@@ -25,15 +26,15 @@ export default function DashboardGrid({ children }: DashboardGridProps) {
 
   return (
     <main className="ml-16 mt-14 min-h-screen bg-neutral-950">
-      <div className="max-w-7xl mx-auto px-8 py-8">
+      <div className="max-w-6xl mx-auto px-6 py-6">
         {/* Header: Date + Greeting */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h2 className="text-3xl font-bold text-white mb-1">{greeting}</h2>
-          <p className="text-sm text-neutral-400">{dateStr}</p>
+          <p className="text-xs text-neutral-500">{dateStr}</p>
         </div>
 
-        {/* Grid layout for cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Grid layout for cards - 2 columns on desktop, dynamic layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {children}
         </div>
       </div>
@@ -55,8 +56,8 @@ export function DashboardCard({
 }) {
   return (
     <div 
-      className={`bg-neutral-900 border border-neutral-800 rounded-xl p-6 ${
-        fullWidth ? 'lg:col-span-3' : ''
+      className={`bg-neutral-900 border border-neutral-800 rounded-xl p-5 ${
+        fullWidth ? 'lg:col-span-2' : ''
       } ${className}`}
     >
       {children}

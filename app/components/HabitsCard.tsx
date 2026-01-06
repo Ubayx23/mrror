@@ -104,15 +104,15 @@ export default function HabitsCard() {
 
   return (
     <DashboardCard>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-neutral-400 uppercase tracking-wide">
-            Daily Habits
+      <div className="space-y-3">
+        <div className="flex items-baseline justify-between border-b border-neutral-800 pb-2">
+          <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+            Habits
           </h3>
           {habits.length < 3 && !isAdding && (
             <button
               onClick={() => setIsAdding(true)}
-              className="text-xs text-emerald-400 hover:text-emerald-300 font-medium"
+              className="text-xs text-neutral-500 hover:text-neutral-400 font-medium"
             >
               + Add
             </button>
@@ -120,8 +120,8 @@ export default function HabitsCard() {
         </div>
 
         {habits.length === 0 && !isAdding && (
-          <p className="text-sm text-neutral-600 py-4 text-center">
-            No habits yet. Add up to 3.
+          <p className="text-xs text-neutral-600 py-4 text-center">
+            Background context. Add up to 3.
           </p>
         )}
 
