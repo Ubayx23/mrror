@@ -75,8 +75,43 @@ export default function InlineTaskSelectorV2({ onSelect }: InlineTaskSelectorV2P
     if (selectedTaskId) {
       const task = tasks.find((t) => t.id === selectedTaskId);
       if (task) {
-        onSelect(task.id, task.title, duration);
+        // Validate and commit duration before starting
+        const validDuration = validateAndCommitDuration();
+        onSelect(task.id, task.title, validDuration);
       }
+    }
+  };
+
+  const validateAndCommitDuration = (): number => {
+    const parsed = parseInt(customMinutesText);
+    if (isNaN(parsed) || parsed < 1) {
+      // Fallback to current duration if invalid
+      setCustomMinutesText(duration.toString());
+      return duration;
+    }
+    const clamped = Math.max(1, Math.min(240, parsed));
+    setDuration(clamped);
+    setCustomMinutesText(clamped.toString());
+    return clamped;
+  };
+
+  const handlePresetClick = (mins: number) => {
+    setDuration(mins);
+    setCustomMinutesText(mins.toString());
+  };
+
+  const handleCustomMinutesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Allow any input while typing (including empty string)
+    setCustomMinutesText(e.target.value);
+  };
+
+  const handleCustomMinutesBlur = () => {
+    validateAndCommitDuration();
+  };
+
+  const handleCustomMinutesKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      validateAndCommitDuration();
     }
   };
 
@@ -176,6 +211,18 @@ export default function InlineTaskSelectorV2({ onSelect }: InlineTaskSelectorV2P
 
         {/* Duration + Start */}
         <div className="flex flex-col gap-4 pt-4 border-t border-neutral-800">
+          {/* Task-first gating message */}
+          {(tasks.length === 0 || !selectedTaskId) && (
+            <div className="p-3 rounded-lg bg-neutral-800/30 border border-neutral-700/50">
+              <h4 className="text-sm font-medium text-neutral-300 mb-1">
+                Select a task to unlock focus.
+              </h4>
+              <p className="text-xs text-neutral-500">
+                You can&apos;t start a timer without a task. Pick one goal and lock in.
+              </p>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-neutral-400 mb-3">
               Session duration (minutes)
@@ -186,7 +233,7 @@ export default function InlineTaskSelectorV2({ onSelect }: InlineTaskSelectorV2P
                   <button
                     key={mins}
                     type="button"
-                    onClick={() => setDuration(mins)}
+                    onClick={() => handlePresetClick(mins)}
                     className={`px-3 py-2 rounded-lg font-medium transition border text-sm ${
                       duration === mins
                         ? 'bg-emerald-500 border-emerald-500 text-white'
@@ -199,18 +246,19 @@ export default function InlineTaskSelectorV2({ onSelect }: InlineTaskSelectorV2P
               </div>
               <span className="text-neutral-600 text-sm">or</span>
               <input
-                type="number"
-                value={duration}
-                onChange={(e) => setDuration(Math.max(1, Math.min(120, parseInt(e.target.value) || 25)))}
-                min="1"
-                max="120"
+                type="text"
+                value={customMinutesText}
+                onChange={handleCustomMinutesChange}
+                onBlur={handleCustomMinutesBlur}
+                onKeyDown={handleCustomMinutesKeyDown}
+                placeholder="25"
                 className="w-20 px-3 py-2 bg-neutral-800/50 border border-neutral-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               />
             </div>
           </div>
           <button
             onClick={handleStart}
-            disabled={!selectedTaskId}
+            disabled={!selectedTaskId || tasks.length === 0}
             className="w-full px-8 py-3 rounded-lg bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition disabled:opacity-40 disabled:cursor-not-allowed text-lg"
           >
             Start focus session
