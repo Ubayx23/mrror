@@ -1,29 +1,55 @@
 # mrror
 
-Phase 3 (continued): intent-first execution surface. Boot → one-line journal prompt → active task + timer → progress. Top navigation links to Home (active), Tasks, Journal, Goals, Projects (placeholders).
+**A calm, intentional focus workspace.** Dark mode dashboard for deep work sessions with integrated task management, live journaling, and daily habit tracking.
 
 ---
 
 ## What You See
 
-- Brief boot/loading view (~1–2s) with "Initializing mrror…".
-- **Top navigation bar** with:
-  - App name (left)
-  - Links: Home (active), Tasks, Journal, Goals, Projects (others are "coming soon" placeholders)
-  - Minutes focused today (right)
-- **Home screen layout** (in order of importance):
-  1. **Journal intent input** — "What are you working on right now, and why does it matter?" (one-liner, stores locally)
-  2. **Active task card** — Task name, duration, timer with start/pause/done buttons
-  3. **Progress indicator** — Minutes focused today (shown in top nav)
-  4. **Task selector** — Modal for picking/creating a task and setting duration before starting
+**Clean command center layout:**
+- **Top bar** — App status, active timer, daily progress
+- **Left rail** — Icon navigation (Home active, others coming soon)
+- **Main dashboard** — Time-based greeting + focused workspace
 
-## Core Mechanics
+**Vertical hierarchy:**
+1. **Focus session** — Timer + Journal (side by side, equal importance)
+2. **Reflection row** — Today's Summary + Daily Habits (side by side)
 
-- **Intent before execution** — User sets intention before starting any work.
-- **One active task at a time** — Focus on one thing.
-- **Task & duration binding** — No timer without a task and chosen duration.
-- **Earned progress only** — Minutes today = completed sessions, reset at midnight.
-- **Clean, calm design** — Black & white, minimal friction, professional feel.
+---
+
+## Core Features
+
+### Focus Timer
+- Preset durations: **15, 25, 45, 60 minutes** (one-click)
+- Custom duration input (1-120 minutes)
+- Start/Pause/Reset/Done controls
+- Progress bar visualization
+- Must bind to a task before starting
+
+### Task Management
+- Create, select, and delete tasks
+- Clean list view with inline controls
+- Task selection required for timer
+- Stored locally per-browser
+
+### Journal
+- Live auto-save (500ms debounce)
+- Always visible thinking space
+- Equal visual importance to timer
+- Positioned for active use during work
+
+### Daily Habits
+- Track 1-3 daily habits
+- Simple toggle (done / not done)
+- 7-day visual indicator (dots)
+- Auto-rotates history at midnight
+- Stored locally
+
+### Today's Summary
+- Minutes focused (earned, not estimated)
+- Sessions completed
+- Unique tasks worked on
+- Resets at local midnight
 
 ---
 
@@ -35,57 +61,59 @@ Phase 3 (continued): intent-first execution surface. Boot → one-line journal p
 | React | 19.2.3 | UI library |
 | TypeScript | 5.x | Type safety |
 | Tailwind CSS | 4.x | Styling |
-| ESLint | 9.x | Linting |
 
-Client-side only. localStorage for tasks, sessions, intent, state.
+Client-side only. All data persists via localStorage.
 
 ---
 
 ## Key Files
 
-**New in Phase 3 (continued):**
-- [app/components/TopNav.tsx](app/components/TopNav.tsx) — Navigation bar with links and daily progress.
-- [app/components/JournalIntentInput.tsx](app/components/JournalIntentInput.tsx) — One-line intent prompt.
-- [app/utils/intent.ts](app/utils/intent.ts) — Store and load journal intent locally.
+**Layout Components:**
+- [TopBar.tsx](app/components/TopBar.tsx) — System bar with timer status
+- [IconRail.tsx](app/components/IconRail.tsx) — Vertical left navigation
+- [DashboardGrid.tsx](app/components/DashboardGrid.tsx) — Card-based main content
 
-**From Phase 3 (initial):**
-- [app/components/HomeScreen.tsx](app/components/HomeScreen.tsx) — Refactored to use TopNav and JournalIntentInput.
-- [app/components/ActiveTaskCard.tsx](app/components/ActiveTaskCard.tsx) — Centerpiece card with task + timer.
-- [app/components/TaskSelector.tsx](app/components/TaskSelector.tsx) — Modal for picking/creating task + setting duration.
-- [app/components/AllTasksList.tsx](app/components/AllTasksList.tsx) — Modal showing all tasks.
-- [app/utils/sessions.ts](app/utils/sessions.ts) — Track completed focus sessions and calculate daily minutes.
+**Feature Components:**
+- [HomeScreen.tsx](app/components/HomeScreen.tsx) — Main orchestrator
+- [ActiveTaskCardV2.tsx](app/components/ActiveTaskCardV2.tsx) — Compact timer card
+- [InlineTaskSelectorV2.tsx](app/components/InlineTaskSelectorV2.tsx) — Task picker with presets + custom input
+- [NotesPanel.tsx](app/components/NotesPanel.tsx) — Live journal with auto-save
+- [StatsCard.tsx](app/components/StatsCard.tsx) — Today's summary (minutes, sessions, tasks)
+- [HabitsCard.tsx](app/components/HabitsCard.tsx) — Daily habit tracker with 7-day history
 
-**Existing (updated):**
-- [app/page.tsx](app/page.tsx) — Renders HomeScreen after boot.
+**Utilities:**
+- [sessions.ts](app/utils/sessions.ts) — Session tracking, daily calculations
+- [intent.ts](app/utils/intent.ts) — Journal intent storage (legacy)
 
-**Legacy (dormant):**
-- [app/components/IconPanel.tsx](app/components/IconPanel.tsx), [app/components/DashboardShell.tsx](app/components/DashboardShell.tsx), [app/components/FocusTimer.tsx](app/components/FocusTimer.tsx), [app/components/TasksPanel.tsx](app/components/TasksPanel.tsx) — From Phase 2, no longer used.
-- [app/utils/storage.ts](app/utils/storage.ts), [app/utils/SystemMetrics.ts](app/utils/SystemMetrics.ts) — Original utilities, not used.
+**Entry Point:**
+- [page.tsx](app/page.tsx) — Renders HomeScreen after boot
 
 ---
 
 ## Development
 
 ```bash
-npm install      # install deps
-npm run dev      # start dev server
+npm install      # install dependencies
+npm run dev      # start dev server (http://localhost:3000)
 npm run build    # production build
 npm start        # start production server
-npm run lint     # lint
+npm run lint     # lint code
 ```
 
 ---
 
 ## Data Structures
 
-**Tasks** (localStorage key: `mrror-tasks-v1`):
+All data stored in localStorage:
+
+**Tasks** (`mrror-tasks-v1`):
 ```json
 [
   { "id": "uuid", "title": "Task name" }
 ]
 ```
 
-**Sessions** (localStorage key: `mrror-sessions-v1`):
+**Sessions** (`mrror-sessions-v1`):
 ```json
 [
   {
@@ -98,26 +126,69 @@ npm run lint     # lint
 ]
 ```
 
-**Intent** (localStorage key: `mrror-intent-v1`):
+**Journal** (`mrror-notes-v1`):
+```
+Plain text string, auto-saved every 500ms
+```
+
+**Habits** (`mrror-habits-v1`):
 ```json
-{
-  "id": "uuid",
-  "text": "Build the focus timer and make it feel good",
-  "createdAt": "2025-01-06T10:30:00Z"
-}
+[
+  {
+    "id": "uuid",
+    "name": "Habit name",
+    "history": [true, false, true, false, false, true, false]
+  }
+]
+```
+
+**Habit History Marker** (`mrror-habit-history-v1`):
+```
+Last check date (string) - triggers daily rotation
 ```
 
 ---
 
-## Next (Phase 4 ideas)
+## Design Philosophy
 
-- Build out Journal, Goals, Projects tabs with simple input/display.
-- Session history and retrospectives (optional).
-- Daily wrap-up prompt.
-- Mobile app or PWA.
+- **Dark mode default** — Neutral-950 background, emerald accent
+- **Calm, not loud** — No gamification, no animations, soft shadows
+- **Intentional spacing** — Every element has purpose and place
+- **Thinking while working** — Journal is active workspace, not afterthought
+- **Earned progress** — Minutes = completed sessions only, resets at midnight
 
 ---
 
-## One-Line Context for AI
+## Layout Grid
 
-Mrror is a minimal, intention-first execution surface: set your intent, pick a task, start the timer, watch the focus minutes accumulate—everything else is intentionally deferred.
+```
+┌─────────────────────────────────────────┐
+│  Greeting (Good morning/afternoon/evening)│
+│  Date (Monday, January 6)               │
+├──────────────────┬──────────────────────┤
+│  Timer Card      │  Journal Panel       │
+│  (compact)       │  (thinking space)    │
+├──────────────────┼──────────────────────┤
+│  Today's Summary │  Daily Habits        │
+│  (reflection)    │  (reflection)        │
+└──────────────────┴──────────────────────┘
+```
+
+Responsive: 3-column grid on desktop, stacks on mobile.
+
+---
+
+## Roadmap
+
+**Phase 5 (Potential):**
+- Build out Tasks, Journal, Goals, Projects tabs
+- Session history view
+- Weekly/monthly retrospectives
+- Export/backup functionality
+
+---
+
+## One-Line Context
+
+Mrror is a calm, dark-mode focus workspace where you set a task, run a timer, journal your thoughts, and track daily habits—all stored locally, all intentionally designed.
+

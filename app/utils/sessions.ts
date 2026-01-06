@@ -71,3 +71,47 @@ export function getMinutesCurrentDay(): number {
   const totalSeconds = sessionsToday.reduce((sum, s) => sum + s.durationSeconds, 0);
   return Math.floor(totalSeconds / 60);
 }
+
+/**
+ * Get count of completed sessions today
+ */
+export function getSessionsCountToday(): number {
+  const sessions = loadSessions();
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  return sessions.filter((s) => {
+    const completedDate = new Date(s.completedAt);
+    const sessionDay = new Date(
+      completedDate.getFullYear(),
+      completedDate.getMonth(),
+      completedDate.getDate()
+    );
+    return sessionDay.getTime() === today.getTime();
+  }).length;
+}
+
+/**
+ * Get count of unique tasks completed today
+ */
+export function getTasksCompletedToday(): number {
+  const sessions = loadSessions();
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  const uniqueTaskIds = new Set(
+    sessions
+      .filter((s) => {
+        const completedDate = new Date(s.completedAt);
+        const sessionDay = new Date(
+          completedDate.getFullYear(),
+          completedDate.getMonth(),
+          completedDate.getDate()
+        );
+        return sessionDay.getTime() === today.getTime();
+      })
+      .map((s) => s.taskId)
+  );
+
+  return uniqueTaskIds.size;
+}

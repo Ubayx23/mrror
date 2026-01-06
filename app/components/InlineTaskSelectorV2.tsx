@@ -42,6 +42,7 @@ export default function InlineTaskSelectorV2({ onSelect }: InlineTaskSelectorV2P
   const [selectedTaskId, setSelectedTaskId] = useState('');
   const [newTaskName, setNewTaskName] = useState('');
   const [duration, setDuration] = useState(25);
+  const [customMinutesText, setCustomMinutesText] = useState('25');
   const [showNewTaskInput, setShowNewTaskInput] = useState(false);
 
   const handleCreateTask = () => {
@@ -174,26 +175,45 @@ export default function InlineTaskSelectorV2({ onSelect }: InlineTaskSelectorV2P
         </div>
 
         {/* Duration + Start */}
-        <div className="flex items-end gap-4 pt-4 border-t border-neutral-800">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-neutral-400 mb-2">
-              Duration (minutes)
+        <div className="flex flex-col gap-4 pt-4 border-t border-neutral-800">
+          <div>
+            <label className="block text-sm font-medium text-neutral-400 mb-3">
+              Session duration (minutes)
             </label>
-            <input
-              type="number"
-              value={duration}
-              onChange={(e) => setDuration(Math.max(1, Math.min(120, parseInt(e.target.value) || 25)))}
-              min="1"
-              max="120"
-              className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-            />
+            <div className="flex gap-2 items-center">
+              <div className="grid grid-cols-4 gap-2 flex-1">
+                {[15, 25, 45, 60].map((mins) => (
+                  <button
+                    key={mins}
+                    type="button"
+                    onClick={() => setDuration(mins)}
+                    className={`px-3 py-2 rounded-lg font-medium transition border text-sm ${
+                      duration === mins
+                        ? 'bg-emerald-500 border-emerald-500 text-white'
+                        : 'bg-neutral-800/50 border-neutral-700 text-neutral-300 hover:border-neutral-600'
+                    }`}
+                  >
+                    {mins}m
+                  </button>
+                ))}
+              </div>
+              <span className="text-neutral-600 text-sm">or</span>
+              <input
+                type="number"
+                value={duration}
+                onChange={(e) => setDuration(Math.max(1, Math.min(120, parseInt(e.target.value) || 25)))}
+                min="1"
+                max="120"
+                className="w-20 px-3 py-2 bg-neutral-800/50 border border-neutral-700 rounded-lg text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              />
+            </div>
           </div>
           <button
             onClick={handleStart}
             disabled={!selectedTaskId}
-            className="px-8 py-2 rounded-lg bg-emerald-500 text-white font-medium hover:bg-emerald-600 transition disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full px-8 py-3 rounded-lg bg-emerald-500 text-white font-semibold hover:bg-emerald-600 transition disabled:opacity-40 disabled:cursor-not-allowed text-lg"
           >
-            Start session
+            Start focus session
           </button>
         </div>
       </div>

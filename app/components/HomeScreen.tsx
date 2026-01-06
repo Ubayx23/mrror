@@ -7,10 +7,12 @@ import DashboardGrid from '@/app/components/DashboardGrid';
 import ActiveTaskCardV2 from '@/app/components/ActiveTaskCardV2';
 import InlineTaskSelectorV2 from '@/app/components/InlineTaskSelectorV2';
 import StatsCard from '@/app/components/StatsCard';
-import { getMinutesCurrentDay } from '@/app/utils/sessions';
+import NotesPanel from '@/app/components/NotesPanel';
+import HabitsCard from '@/app/components/HabitsCard';
+import { getMinutesCurrentDay, getSessionsCountToday, getTasksCompletedToday } from '@/app/utils/sessions';
 
 /**
- * Phase 4: Dashboard layout with top bar, icon rail, and card-based grid
+ * Phase 4 refined: Clean command center with all productivity tools
  * Dark mode, calm system dashboard feel
  */
 export default function HomeScreen() {
@@ -18,6 +20,8 @@ export default function HomeScreen() {
   const [activeTaskName, setActiveTaskName] = useState('');
   const [activeDurationMinutes, setActiveDurationMinutes] = useState(25);
   const [minutestoday, setMinutestoday] = useState(() => getMinutesCurrentDay());
+  const [sessionsToday, setSessionsToday] = useState(() => getSessionsCountToday());
+  const [tasksCompleted, setTasksCompleted] = useState(() => getTasksCompletedToday());
   const [timerDisplay, setTimerDisplay] = useState('');
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
@@ -31,6 +35,8 @@ export default function HomeScreen() {
     setActiveTaskId(null);
     setActiveTaskName('');
     setMinutestoday(getMinutesCurrentDay());
+    setSessionsToday(getSessionsCountToday());
+    setTasksCompleted(getTasksCompletedToday());
     setTimerDisplay('');
     setIsTimerRunning(false);
   }, []);
@@ -54,6 +60,7 @@ export default function HomeScreen() {
       <DashboardGrid>
         {activeTaskId ? (
           <>
+            {/* Row 1: Timer + Journal (equal partners) */}
             <ActiveTaskCardV2
               taskId={activeTaskId}
               taskName={activeTaskName}
@@ -61,12 +68,31 @@ export default function HomeScreen() {
               onComplete={handleTaskComplete}
               onTimerUpdate={handleTimerUpdate}
             />
-            <StatsCard minutesToday={minutestoday} />
+            <NotesPanel />
+            
+            {/* Row 2: Reflection (Stats + Habits side by side) */}
+            <StatsCard 
+              minutesToday={minutestoday} 
+              sessionsToday={sessionsToday}
+              tasksCompleted={tasksCompleted}
+            />
+            <HabitsCard />
           </>
         ) : (
           <>
-            <InlineTaskSelectorV2 onSelect={handleTaskSelect} />
-            <StatsCard minutesToday={minutestoday} />
+            {/* Row 1: Task selector spans 2 columns */}
+            <div className="lg:col-span-2">
+              <InlineTaskSelectorV2 onSelect={handleTaskSelect} />
+            </div>
+            <NotesPanel />
+            
+            {/* Row 2: Reflection (Stats + Habits side by side) */}
+            <StatsCard 
+              minutesToday={minutestoday} 
+              sessionsToday={sessionsToday}
+              tasksCompleted={tasksCompleted}
+            />
+            <HabitsCard />
           </>
         )}
       </DashboardGrid>
