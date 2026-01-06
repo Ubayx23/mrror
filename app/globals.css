@@ -12,9 +12,10 @@
 }
 
 body {
-  background: var(--true-black);
-  color: var(--soft-white);
-  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  background: #f9fafb;
+  color: #0f172a;
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
 }
 
 /* CRT scanlines animation */
