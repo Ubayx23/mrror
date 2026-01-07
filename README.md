@@ -1,194 +1,265 @@
 # mrror
 
-**A calm, intentional focus workspace.** Dark mode dashboard for deep work sessions with integrated task management, live journaling, and daily habit tracking.
+**A calm, intentional daily system.** Dark-mode workspace for deep work, journaling, goal tracking, and daily reflection. Everything persists locally—no servers, no cloud.
 
 ---
 
-## What You See
+## Overview
 
-**Clean command center layout:**
-- **Top bar** — App status, active timer, daily progress
-- **Left rail** — Icon navigation (Home active, others coming soon)
-- **Main dashboard** — Time-based greeting + focused workspace
+Mrror helps you move through your day with intention. Track daily commitments, journal your thinking, manage long-term goals, and build consistent habits—all in one place.
 
-**Vertical hierarchy:**
-1. **Focus session** — Timer + Journal (side by side, equal importance)
-2. **Reflection row** — Today's Summary + Daily Habits (side by side)
+**Core flows:**
+1. **Home** — Daily promise system + fire streak tracker
+2. **Journal** — 3-column entry system with formatting toolbar
+3. **Calendar** — Per-day task management
+4. **Goals** — Long-term vision with outcomes and actions
+5. **Check-in** — Daily promise setup (redirects if incomplete)
 
 ---
 
-## Core Features
+## Feature Map
 
-### Focus Timer
-- Preset durations: **15, 25, 45, 60 minutes** (one-click)
-- Custom duration input (1-120 minutes)
-- Start/Pause/Reset/Done controls
-- Progress bar visualization
-- Must bind to a task before starting
-
-### Task Management
-- Create, select, and delete tasks
-- Clean list view with inline controls
-- Task selection required for timer
-- Stored locally per-browser
+### Daily Promise (Home)
+- Set one meaningful promise for today
+- Track completion, failure, or defer
+- See last 7 days of commitment history
+- **Fire streak** — Consecutive days you've opened the app
+- Proof ledger showing historical promises
 
 ### Journal
-- Live auto-save (500ms debounce)
-- Always visible thinking space
-- Equal visual importance to timer
-- Positioned for active use during work
+- **3-column layout**: Categories (sidebar) → Entry list → Full editor
+- **Categories**: Work, Personal, Events, Education, Social
+- **Formatting toolbar**: Slash commands (`/`) for Bold, Italic, Headline, Quote, List, Highlight, Underline
+- **Auto-save** — 600ms debounce on title and body
+- **Date-based** — Organize entries by day (YYYY-MM-DD)
+- **Entry deletion** — Delete from list or editor header
 
-### Daily Habits
-- Track 1-3 daily habits
-- Simple toggle (done / not done)
-- 7-day visual indicator (dots)
-- Auto-rotates history at midnight
-- Stored locally
+### Calendar
+- **Per-day tasks** — Create, complete, delete tasks for any date
+- **Task completion tracking** — Mark tasks done/incomplete
+- **Weekly view** — Visual status rings (blue=selected, neutral=today, emerald=complete, red=incomplete)
+- **Category filtering** — Filter by Work/Personal/Events/etc.
 
-### Today's Summary
-- Minutes focused (earned, not estimated)
-- Sessions completed
-- Unique tasks worked on
-- Resets at local midnight
+### Goals
+- **Time horizons**: 90-day, 1-year, 3-year, 5-year
+- **Outcomes** — Define what success looks like
+- **Actions** — Repeatable steps toward goal
+- **"Use for Today"** — Mark an action to prefill as today's Daily Promise
+- **Full CRUD** — Create, edit, delete goals at any time
+
+### Check-in (Daily Gating)
+- Appears on first load if daily promise not yet set
+- Ensures intentional start to each day
+- Redirects to promise creation flow
 
 ---
 
 ## Tech Stack
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| Next.js | 16.1.1 | App Router web app |
-| React | 19.2.3 | UI library |
-| TypeScript | 5.x | Type safety |
-| Tailwind CSS | 4.x | Styling |
+| Component | Version | Notes |
+|-----------|---------|-------|
+| Next.js | 16.1.1 | App Router, client-side only |
+| React | 19.2.3 | UI framework |
+| TypeScript | 5.x | Type safety throughout |
+| Tailwind CSS | 4.x | Utility-first styling |
 
-Client-side only. All data persists via localStorage.
-
----
-
-## Key Files
-
-**Layout Components:**
-- [TopBar.tsx](app/components/TopBar.tsx) — System bar with timer status
-- [IconRail.tsx](app/components/IconRail.tsx) — Vertical left navigation
-- [DashboardGrid.tsx](app/components/DashboardGrid.tsx) — Card-based main content
-
-**Feature Components:**
-- [HomeScreen.tsx](app/components/HomeScreen.tsx) — Main orchestrator
-- [ActiveTaskCardV2.tsx](app/components/ActiveTaskCardV2.tsx) — Compact timer card
-- [InlineTaskSelectorV2.tsx](app/components/InlineTaskSelectorV2.tsx) — Task picker with presets + custom input
-- [NotesPanel.tsx](app/components/NotesPanel.tsx) — Live journal with auto-save
-- [StatsCard.tsx](app/components/StatsCard.tsx) — Today's summary (minutes, sessions, tasks)
-- [HabitsCard.tsx](app/components/HabitsCard.tsx) — Daily habit tracker with 7-day history
-
-**Utilities:**
-- [sessions.ts](app/utils/sessions.ts) — Session tracking, daily calculations
-- [intent.ts](app/utils/intent.ts) — Journal intent storage (legacy)
-
-**Entry Point:**
-- [page.tsx](app/page.tsx) — Renders HomeScreen after boot
+**Client-only architecture** — All state lives in browser via localStorage. No backend required.
 
 ---
 
-## Development
+## Project Structure
 
-```bash
-npm install      # install dependencies
-npm run dev      # start dev server (http://localhost:3000)
-npm run build    # production build
-npm start        # start production server
-npm run lint     # lint code
+```
+app/
+├── components/          # UI components
+│   ├── TopBar.tsx      # System bar (fire streak, timer)
+│   ├── IconRail.tsx    # Left vertical navigation
+│   ├── HomeScreen.tsx  # Home page orchestrator
+│   ├── ProofLedger.tsx # 7-day promise history
+│   └── [others]        # Feature-specific components
+├── utils/              # State management & data
+│   ├── storage.ts      # Daily Promise CRUD + fire streak
+│   ├── calendar.ts     # Per-day tasks
+│   ├── journal.ts      # Journal entries
+│   ├── goals.ts        # Long-term goals
+│   ├── sessions.ts     # Session tracking
+│   └── SystemMetrics.ts # Metrics calculations
+├── page.tsx            # Home page route
+├── layout.tsx          # Root layout
+├── journal/page.tsx    # Journal full page
+├── calendar/page.tsx   # Calendar full page
+├── goals/page.tsx      # Goals full page
+├── check-in/page.tsx   # Daily promise setup
+└── globals.css         # Global styles
 ```
 
 ---
 
 ## Data Structures
 
-All data stored in localStorage:
+All persisted in localStorage:
 
-**Tasks** (`mrror-tasks-v1`):
-```json
-[
-  { "id": "uuid", "title": "Task name" }
-]
-```
-
-**Sessions** (`mrror-sessions-v1`):
+**Daily Promises** (`mrror-promises-v1`):
 ```json
 [
   {
     "id": "uuid",
-    "taskId": "uuid",
-    "taskName": "Task name",
-    "durationSeconds": 1500,
-    "completedAt": "2025-01-06T10:30:00Z"
+    "title": "Build the feature",
+    "state": "pending|completed|failed",
+    "createdAt": "2025-01-07T08:00:00Z",
+    "completedAt": "2025-01-07T17:00:00Z"
   }
 ]
 ```
 
-**Journal** (`mrror-notes-v1`):
-```
-Plain text string, auto-saved every 500ms
-```
-
-**Habits** (`mrror-habits-v1`):
+**Calendar Tasks** (`mrror-calendar-tasks-v1`):
 ```json
 [
   {
     "id": "uuid",
-    "name": "Habit name",
-    "history": [true, false, true, false, false, true, false]
+    "date": "2025-01-07",
+    "title": "Task name",
+    "completedAt": "2025-01-07T14:30:00Z",
+    "createdAt": "2025-01-07T09:00:00Z"
   }
 ]
 ```
 
-**Habit History Marker** (`mrror-habit-history-v1`):
+**Journal Entries** (`mrror-journal-entries-v1`):
+```json
+[
+  {
+    "id": "uuid",
+    "date": "2025-01-07",
+    "title": "Entry title",
+    "bodyHtml": "<p>HTML content</p>",
+    "category": "Work|Personal|Events|Education|Social",
+    "createdAt": "2025-01-07T10:00:00Z",
+    "updatedAt": "2025-01-07T10:05:00Z"
+  }
+]
 ```
-Last check date (string) - triggers daily rotation
+
+**Goals** (`mrror-goals-v1`):
+```json
+[
+  {
+    "id": "uuid",
+    "title": "Ship the product",
+    "timeHorizon": "90-day|1-year|3-year|5-year",
+    "outcomes": [
+      { "id": "uuid", "text": "Achieve X metric" }
+    ],
+    "actions": [
+      {
+        "id": "uuid",
+        "title": "Build feature",
+        "description": "Optional details",
+        "useForToday": false
+      }
+    ],
+    "createdAt": "2025-01-01T00:00:00Z",
+    "updatedAt": "2025-01-07T10:00:00Z"
+  }
+]
 ```
+
+**Fire Streak** (`mrror-open-days-v1`):
+```json
+[
+  {
+    "date": "2025-01-07",
+    "opened": true
+  }
+]
+```
+
+---
+
+## Key Utilities
+
+**storage.ts** — Daily Promise management
+- `getTodayPromise()` — Get today's promise (or null)
+- `createPromise(title)` — Create new promise
+- `completePromise(id)` — Mark as done
+- `failPromise(id)` — Mark as failed
+- `getLastSevenDaysPromises()` — Historical view
+- `getFireStreak()` — Get consecutive open days
+- `markOpenedToday()` — Track daily open
+- `isDailyCheckInComplete()` — Gate check (redirects if false)
+
+**calendar.ts** — Per-day task management
+- `getTasksForDate(date)` — Get tasks for YYYY-MM-DD
+- `addTaskForDate(date, title)` — Create task
+- `toggleTaskCompletion(id)` — Mark complete/incomplete
+- `deleteTask(id)` — Remove task
+- `getCompletedCountForDate(date)` — Progress tracking
+- `getTodayDate()` — Local YYYY-MM-DD format
+
+**journal.ts** — Journal entry CRUD
+- `getEntries()` — Get all entries
+- `createEntry(title, bodyHtml, category)` — Create
+- `updateEntry(id, updates)` — Modify entry
+- `deleteEntry(id)` — Remove entry
+- `getTodayDate()` — Current date in local timezone
+
+**goals.ts** — Goal management
+- `createGoal(title, timeHorizon)` — Create goal
+- `addOutcome(goalId, text)` — Add outcome
+- `addAction(goalId, title, description)` — Add action
+- `setActionAsPromise(goalId, actionId)` — Mark for today
+- `deleteGoal(id)`, `removeOutcome(id)`, `removeAction(id)` — Deletions
+
+---
+
+## Navigation
+
+**IconRail** (`app/components/IconRail.tsx`):
+- `◆` Home — Daily promise + fire streak
+- `📅` Calendar — Per-day task view
+- `◈` Journal — Full-page entry editor
+- `◇` Goals — Long-term vision & actions
+- `◉` Projects — Coming soon
 
 ---
 
 ## Design Philosophy
 
-- **Dark mode default** — Neutral-950 background, emerald accent
-- **Calm, not loud** — No gamification, no animations, soft shadows
-- **Intentional spacing** — Every element has purpose and place
-- **Thinking while working** — Journal is active workspace, not afterthought
-- **Earned progress** — Minutes = completed sessions only, resets at midnight
+- **Dark mode default** — Neutral-950 background, emerald-600 accents
+- **Calm UI** — No gamification, no animations, subtle rings and borders
+- **Client-first** — All state local, no network dependencies
+- **Intentional** — Every feature serves focus and reflection
+- **Accessible** — Clear type hierarchy, proper contrast, keyboard navigation
 
 ---
 
-## Layout Grid
+## Development
 
-```
-┌─────────────────────────────────────────┐
-│  Greeting (Good morning/afternoon/evening)│
-│  Date (Monday, January 6)               │
-├──────────────────┬──────────────────────┤
-│  Timer Card      │  Journal Panel       │
-│  (compact)       │  (thinking space)    │
-├──────────────────┼──────────────────────┤
-│  Today's Summary │  Daily Habits        │
-│  (reflection)    │  (reflection)        │
-└──────────────────┴──────────────────────┘
+```bash
+npm install          # Install dependencies
+npm run dev          # Start dev server (http://localhost:3000)
+npm run build        # Production build
+npm start            # Start production server
+npm run lint         # Run ESLint
 ```
 
-Responsive: 3-column grid on desktop, stacks on mobile.
+**Environment:** Runs in browser only. All data persists to localStorage.
 
 ---
 
-## Roadmap
+## Contributing Notes
 
-**Phase 5 (Potential):**
-- Build out Tasks, Journal, Goals, Projects tabs
-- Session history view
-- Weekly/monthly retrospectives
-- Export/backup functionality
+- Keep components in `app/components/`
+- Utilities go in `app/utils/`
+- New routes as `app/[route]/page.tsx`
+- Use `getTodayDate()` for date consistency (local YYYY-MM-DD)
+- All storage keys end with `-v1` for versioning
+- Guard localStorage access: `if (typeof window !== 'undefined')`
 
 ---
 
-## One-Line Context
+## License
 
-Mrror is a calm, dark-mode focus workspace where you set a task, run a timer, journal your thoughts, and track daily habits—all stored locally, all intentionally designed.
+MIT
+
 
