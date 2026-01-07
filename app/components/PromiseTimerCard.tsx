@@ -11,6 +11,7 @@ interface PromiseTimerCardProps {
   onTimerComplete?: () => void;
   onTimerUpdate?: (display: string, isRunning: boolean) => void;
   embedded?: boolean; // when true, render without card wrapper for attachment
+  stopSignal?: number; // external signal to stop the timer
 }
 
 /**
@@ -18,12 +19,13 @@ interface PromiseTimerCardProps {
  * Timer is no longer the hero - it supports the promise
  * Reduced visual dominance, smaller font sizes, more efficient layout
  */
-export default function PromiseTimerCard({ promise, onTimerComplete, onTimerUpdate, embedded = false }: PromiseTimerCardProps) {
+export default function PromiseTimerCard({ promise, onTimerComplete, onTimerUpdate, embedded = false, stopSignal = 0 }: PromiseTimerCardProps) {
   const estimatedSeconds = (promise.estimatedMinutes || 25) * 60;
   const [totalSeconds, setTotalSeconds] = useState(estimatedSeconds);
   const [remainingSeconds, setRemainingSeconds] = useState(estimatedSeconds);
   const [isRunning, setIsRunning] = useState(false);
   const [customMinutes, setCustomMinutes] = useState('');
+  const [showDurationPanel, setShowDurationPanel] = useState(false);
 
   // Format time
   const timeLabel = useMemo(() => {
@@ -58,6 +60,13 @@ export default function PromiseTimerCard({ promise, onTimerComplete, onTimerUpda
     onTimerUpdate?.(timeLabel, isRunning);
   }, [timeLabel, isRunning, onTimerUpdate]);
 
+  // External stop (e.g., Mark Done clicked)
+  useEffect(() => {
+    if (stopSignal > 0) {
+      setIsRunning(false);
+    }
+  }, [stopSignal]);
+
   const toggleTimer = useCallback(() => {
     setIsRunning(!isRunning);
   }, [isRunning]);
@@ -85,17 +94,13 @@ export default function PromiseTimerCard({ promise, onTimerComplete, onTimerUpda
     setRemainingSeconds(totalSeconds);
   }, [totalSeconds]);
 
-  const content = (
-      <div className="space-y-3">
-        {/* Header - stepped down from promise */}
-        <div className="flex items-baseline justify-between border-b border-neutral-800 pb-2">
-          <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Work Session</h3>
-          <span className="text-xs text-neutral-500">Supporting tool</span>
-        </div>
+  // No direct completion from timer; completion happens via Mark Done on promise card
 
-        {/* Timer display - compact but clear */}
-        <div className="flex items-center justify-center py-4">
-          <div className="text-5xl font-mono font-bold text-white tabular-nums tracking-tight">
+  const content = (
+      <div className="space-y-2">
+        {/* Timer display - more compact */}
+        <div className="flex items-center justify-center py-2">
+          <div className="text-3xl font-mono font-bold text-white tabular-nums tracking-tight">
             {timeLabel}
           </div>
         </div>
@@ -128,42 +133,49 @@ export default function PromiseTimerCard({ promise, onTimerComplete, onTimerUpda
           </button>
         </div>
 
-        {/* Presets - more compact */}
-        <div className="space-y-1.5 pt-2 border-t border-neutral-800">
-          <p className="text-xs text-neutral-500">Quick durations</p>
-          <div className="flex flex-wrap gap-1.5">
-            {TIMER_PRESETS.map((minutes) => (
-              <button
-                key={minutes}
-                onClick={() => handlePresetClick(minutes)}
-                disabled={isRunning}
-                className="px-2.5 py-1 text-xs rounded bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed transition border border-neutral-700"
-              >
-                {minutes}m
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Custom input - minimal */}
-        <div className="flex gap-1.5">
-          <input
-            type="number"
-            value={customMinutes}
-            onChange={(e) => setCustomMinutes(e.target.value)}
-            placeholder="Custom"
-            min="1"
-            max="480"
-            disabled={isRunning}
-            className="flex-1 px-2 py-1 text-xs bg-neutral-800 border border-neutral-700 rounded text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-600 transition disabled:opacity-50"
-          />
+        {/* Duration controls hidden behind a toggle to reduce clutter */}
+        <div className="pt-1">
           <button
-            onClick={handleCustomMinutes}
-            disabled={isRunning || !customMinutes}
-            className="px-2 py-1 text-xs rounded bg-neutral-800 text-neutral-300 hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed transition border border-neutral-700"
+            onClick={() => setShowDurationPanel(v => !v)}
+            className="mx-auto block text-xs text-neutral-400 hover:text-neutral-200 underline"
           >
-            Set
+            {showDurationPanel ? 'Hide duration' : 'Set duration'}
           </button>
+          {showDurationPanel && (
+            <div className="space-y-2 mt-2 border-t border-neutral-800 pt-2">
+              <div className="flex flex-wrap gap-1.5 justify-center">
+                {TIMER_PRESETS.map((minutes) => (
+                  <button
+                    key={minutes}
+                    onClick={() => handlePresetClick(minutes)}
+                    disabled={isRunning}
+                    className="px-2.5 py-1 text-xs rounded bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-neutral-200 disabled:opacity-50 disabled:cursor-not-allowed transition border border-neutral-700"
+                  >
+                    {minutes}m
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-1.5 justify-center">
+                <input
+                  type="number"
+                  value={customMinutes}
+                  onChange={(e) => setCustomMinutes(e.target.value)}
+                  placeholder="Custom"
+                  min="1"
+                  max="480"
+                  disabled={isRunning}
+                  className="w-24 px-2 py-1 text-xs bg-neutral-800 border border-neutral-700 rounded text-white placeholder-neutral-500 focus:outline-none focus:border-neutral-600 transition disabled:opacity-50"
+                />
+                <button
+                  onClick={handleCustomMinutes}
+                  disabled={isRunning || !customMinutes}
+                  className="px-2 py-1 text-xs rounded bg-neutral-800 text-neutral-300 hover:bg-neutral-700 disabled:opacity-50 disabled:cursor-not-allowed transition border border-neutral-700"
+                >
+                  Set
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
   );

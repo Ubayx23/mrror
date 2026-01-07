@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { createPromise, getTodayPromise, DailyPromise } from '@/app/utils/storage';
+import { createPromise, getTodayPromise, DailyPromise, completePromise } from '@/app/utils/storage';
 import PromiseTimerCard from '@/app/components/PromiseTimerCard';
 import { DashboardCard } from './DashboardGrid';
 
@@ -11,6 +11,7 @@ interface DailyPromiseCardProps {
   onPromiseChange?: (promise: DailyPromise | null) => void;
   prefillText?: string;
   attachTimer?: boolean;
+  onMarkDone?: () => void;
 }
 
 /**
@@ -18,11 +19,12 @@ interface DailyPromiseCardProps {
  * Can display a promise or show creation interface
  * Visually dominant, always at top of layout
  */
-export default function DailyPromiseCard({ promise: externalPromise, onPromiseCreated, onPromiseChange, prefillText, attachTimer = false }: DailyPromiseCardProps) {
+export default function DailyPromiseCard({ promise: externalPromise, onPromiseCreated, onPromiseChange, prefillText, attachTimer = false, onMarkDone }: DailyPromiseCardProps) {
   const [todayPromise, setTodayPromise] = useState<DailyPromise | null>(() => getTodayPromise());
   const [promiseText, setPromiseText] = useState('');
   const [estimatedMinutes, setEstimatedMinutes] = useState<number | undefined>();
   const [error, setError] = useState('');
+  const [stopSignal, setStopSignal] = useState(0);
 
   // Use external promise if explicitly provided (including null)
   // Otherwise fall back to internal state
@@ -94,8 +96,32 @@ export default function DailyPromiseCard({ promise: externalPromise, onPromiseCr
             )}
           </div>
 
+          {displayPromise.state === 'pending' && (
+            <button
+              onClick={() => {
+                const updated = completePromise();
+                if (updated) {
+                  setTodayPromise(updated);
+                  onPromiseChange?.(updated);
+                  // Also stop any running timer
+                  setStopSignal((s) => s + 1);
+                  onMarkDone?.();
+                }
+              }}
+              className="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-medium transition text-sm"
+            >
+              ✓ Mark Done
+            </button>
+          )}
+
           {displayPromise.state === 'pending' && attachTimer && (
-            <PromiseTimerCard promise={displayPromise} embedded onTimerComplete={() => {}} onTimerUpdate={() => {}} />
+            <PromiseTimerCard 
+              promise={displayPromise} 
+              embedded 
+              onTimerComplete={() => {}} 
+              onTimerUpdate={() => {}} 
+              stopSignal={stopSignal}
+            />
           )}
         </div>
       </DashboardCard>

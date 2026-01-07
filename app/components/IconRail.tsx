@@ -1,4 +1,5 @@
 'use client';
+import { useRouter } from 'next/navigation';
 
 type IconRailPage = 'home' | 'tasks' | 'journal' | 'goals' | 'projects';
 
@@ -12,6 +13,7 @@ interface IconRailProps {
  * Icons only, minimal, always visible
  */
 export default function IconRail({ currentPage, onNavigate }: IconRailProps) {
+  const router = useRouter();
   const icons = [
     { key: 'home' as IconRailPage, label: 'Home', icon: '◆' },
     { key: 'tasks' as IconRailPage, label: 'Tasks', icon: '☐' },
@@ -21,13 +23,15 @@ export default function IconRail({ currentPage, onNavigate }: IconRailProps) {
   ];
 
   const handleClick = (key: IconRailPage) => {
-    if (key !== 'home') {
-      alert('Coming soon');
+    if (key === 'home') {
+      onNavigate ? onNavigate(key) : router.push('/');
       return;
     }
-    if (onNavigate) {
-      onNavigate(key);
+    if (key === 'tasks') {
+      router.push('/tasks');
+      return;
     }
+    alert('Coming soon');
   };
 
   return (

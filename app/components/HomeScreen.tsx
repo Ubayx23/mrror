@@ -6,15 +6,13 @@ import TopBar from '@/app/components/TopBar';
 import IconRail from '@/app/components/IconRail';
 import DashboardGrid from '@/app/components/DashboardGrid';
 import DailyPromiseCard from '@/app/components/DailyPromiseCard';
-import PromiseTimerCard from '@/app/components/PromiseTimerCard';
 import PromiseResolveCard from '@/app/components/PromiseResolveCard';
 import ProofLedger from '@/app/components/ProofLedger';
 import NotesPanel from '@/app/components/NotesPanel';
 import HabitsCard from '@/app/components/HabitsCard';
 import GoalsPanel from '@/app/components/GoalsPanel';
 import WeeklyCalendar from '@/app/components/WeeklyCalendar';
-import FireStreak from '@/app/components/FireStreak';
-import { getTodayPromise, autoFailUnresolvedYesterday, DailyPromise, isDailyCheckInComplete } from '@/app/utils/storage';
+import { getTodayPromise, autoFailUnresolvedYesterday, DailyPromise, isDailyCheckInComplete, markOpenedToday } from '@/app/utils/storage';
 
 /**
  * Phase 6: Promise-Centric UI
@@ -28,6 +26,8 @@ export default function HomeScreen() {
     if (!isDailyCheckInComplete()) {
       router.replace('/check-in');
     }
+    // Track open for fire streak
+    markOpenedToday();
   }, [router]);
 
   const [todayPromise, setTodayPromise] = useState<DailyPromise | null>(() => {
@@ -48,14 +48,7 @@ export default function HomeScreen() {
     setTodayPromise(promise);
   }, []);
 
-  const handleTimerUpdate = useCallback((display: string, running: boolean) => {
-    setTimerDisplay(display);
-    setIsTimerRunning(running);
-  }, []);
-
-  const handleTimerComplete = useCallback(() => {
-    setShowResolve(true);
-  }, []);
+  // Timer callbacks are handled within embedded components
 
   const handlePromiseResolved = useCallback((promise: DailyPromise) => {
     setTodayPromise(promise);
@@ -98,21 +91,17 @@ export default function HomeScreen() {
               <GoalsPanel onPrefill={() => {}} />
             </div>
 
-            {/* Proof Ledger (secondary, full width) */}
-            <div className="lg:col-span-2">
-              <ProofLedger />
-            </div>
+            {/* Proof Ledger (secondary, compact) */}
+            <ProofLedger />
 
             {/* Journal + Habits (bottom row) */}
             <NotesPanel showPrompt="idle" promise={null} />
             <HabitsCard />
 
-            {/* Orientation: Calendar + Fire Streak */}
+
+            {/* Orientation: Calendar */}
             <div className="lg:col-span-1">
               <WeeklyCalendar />
-            </div>
-            <div className="lg:col-span-1">
-              <FireStreak />
             </div>
           </>
         ) : todayPromise.state === 'pending' ? (
@@ -120,7 +109,7 @@ export default function HomeScreen() {
           <>
             {/* Promise card (dominant, left) with embedded timer */}
             <div className="lg:col-span-1">
-              <DailyPromiseCard promise={todayPromise} attachTimer />
+              <DailyPromiseCard promise={todayPromise} attachTimer onPromiseChange={handlePromiseChange} />
             </div>
             {/* Goals (supportive, right) */}
             <div className="lg:col-span-1">
@@ -146,12 +135,10 @@ export default function HomeScreen() {
             {/* Habits (optional, secondary) */}
             <HabitsCard />
 
-            {/* Orientation: Calendar + Fire Streak */}
+
+            {/* Orientation: Calendar */}
             <div className="lg:col-span-1">
               <WeeklyCalendar />
-            </div>
-            <div className="lg:col-span-1">
-              <FireStreak />
             </div>
           </>
         ) : (
@@ -173,9 +160,7 @@ export default function HomeScreen() {
             />
 
             {/* Proof Ledger */}
-            <div className="lg:col-span-2">
-              <ProofLedger />
-            </div>
+            <ProofLedger />
 
             {/* Button to create another promise */}
             <div className="lg:col-span-2">
@@ -190,12 +175,10 @@ export default function HomeScreen() {
             {/* Habits card */}
             <HabitsCard />
 
-            {/* Orientation: Calendar + Fire Streak */}
+
+            {/* Orientation: Calendar */}
             <div className="lg:col-span-1">
               <WeeklyCalendar />
-            </div>
-            <div className="lg:col-span-1">
-              <FireStreak />
             </div>
           </>
         )}
