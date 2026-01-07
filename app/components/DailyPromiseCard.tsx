@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { createPromise, getTodayPromise, DailyPromise, completePromise } from '@/app/utils/storage';
 import PromiseTimerCard from '@/app/components/PromiseTimerCard';
 import { DashboardCard } from './DashboardGrid';
+import { playSuccessChime } from '@/app/utils/audio';
 
 interface DailyPromiseCardProps {
   promise?: DailyPromise | null;
@@ -99,6 +100,7 @@ export default function DailyPromiseCard({ promise: externalPromise, onPromiseCr
           {displayPromise.state === 'pending' && (
             <button
               onClick={() => {
+                playSuccessChime();
                 const updated = completePromise();
                 if (updated) {
                   setTodayPromise(updated);
