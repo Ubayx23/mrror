@@ -9,9 +9,8 @@ import DailyPromiseCard from '@/app/components/DailyPromiseCard';
 import PromiseResolveCard from '@/app/components/PromiseResolveCard';
 import ProofLedger from '@/app/components/ProofLedger';
 import NotesPanel from '@/app/components/NotesPanel';
-import HabitsCard from '@/app/components/HabitsCard';
 import GoalsPanel from '@/app/components/GoalsPanel';
-import WeeklyCalendar from '@/app/components/WeeklyCalendar';
+// Removed ProductivityChart per request; keep ProofLedger
 import { getTodayPromise, autoFailUnresolvedYesterday, DailyPromise, isDailyCheckInComplete, markOpenedToday } from '@/app/utils/storage';
 
 /**
@@ -94,15 +93,8 @@ export default function HomeScreen() {
             {/* Proof Ledger (secondary, compact) */}
             <ProofLedger />
 
-            {/* Journal + Habits (bottom row) */}
+            {/* Journal (bottom row) */}
             <NotesPanel showPrompt="idle" promise={null} />
-            <HabitsCard />
-
-
-            {/* Orientation: Calendar */}
-            <div className="lg:col-span-1">
-              <WeeklyCalendar />
-            </div>
           </>
         ) : todayPromise.state === 'pending' ? (
           // STATE: Promise committed, timer active or waiting
@@ -131,15 +123,6 @@ export default function HomeScreen() {
             ) : (
               <ProofLedger />
             )}
-
-            {/* Habits (optional, secondary) */}
-            <HabitsCard />
-
-
-            {/* Orientation: Calendar */}
-            <div className="lg:col-span-1">
-              <WeeklyCalendar />
-            </div>
           </>
         ) : (
           // STATE: Promise completed or broken
@@ -170,15 +153,6 @@ export default function HomeScreen() {
               >
                 Make a New Statement
               </button>
-            </div>
-
-            {/* Habits card */}
-            <HabitsCard />
-
-
-            {/* Orientation: Calendar */}
-            <div className="lg:col-span-1">
-              <WeeklyCalendar />
             </div>
           </>
         )}

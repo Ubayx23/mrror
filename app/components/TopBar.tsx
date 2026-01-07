@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getFireStreak } from '@/app/utils/storage';
 interface TopBarProps {
   activeTaskName?: string; // retained for backward compat, not shown
@@ -20,6 +20,7 @@ export default function TopBar({
   minutesToday 
 }: TopBarProps) {
   const [streak, setStreak] = useState(0);
+
   useEffect(() => {
     setStreak(getFireStreak());
   }, []);

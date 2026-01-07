@@ -1,7 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 
-type IconRailPage = 'home' | 'tasks' | 'journal' | 'goals' | 'projects';
+type IconRailPage = 'home' | 'calendar' | 'journal' | 'goals' | 'projects';
 
 interface IconRailProps {
   currentPage: IconRailPage;
@@ -16,7 +16,7 @@ export default function IconRail({ currentPage, onNavigate }: IconRailProps) {
   const router = useRouter();
   const icons = [
     { key: 'home' as IconRailPage, label: 'Home', icon: '◆' },
-    { key: 'tasks' as IconRailPage, label: 'Tasks', icon: '☐' },
+    { key: 'calendar' as IconRailPage, label: 'Calendar', icon: '📅' },
     { key: 'journal' as IconRailPage, label: 'Journal', icon: '◈' },
     { key: 'goals' as IconRailPage, label: 'Goals', icon: '◇' },
     { key: 'projects' as IconRailPage, label: 'Projects', icon: '◉' },
@@ -24,11 +24,23 @@ export default function IconRail({ currentPage, onNavigate }: IconRailProps) {
 
   const handleClick = (key: IconRailPage) => {
     if (key === 'home') {
-      onNavigate ? onNavigate(key) : router.push('/');
+      if (onNavigate) {
+        onNavigate(key);
+      } else {
+        router.push('/');
+      }
       return;
     }
-    if (key === 'tasks') {
-      router.push('/tasks');
+    if (key === 'calendar') {
+      router.push('/calendar');
+      return;
+    }
+    if (key === 'journal') {
+      router.push('/journal');
+      return;
+    }
+    if (key === 'goals') {
+      router.push('/goals');
       return;
     }
     alert('Coming soon');

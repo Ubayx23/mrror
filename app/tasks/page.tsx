@@ -5,11 +5,11 @@ import IconRail from '@/app/components/IconRail';
 import DashboardGrid from '@/app/components/DashboardGrid';
 import IntentTasksPanel from '@/app/components/IntentTasksPanel';
 
-export default function TasksPage() {
+export default function IntentTasksPage() {
   return (
     <div className="min-h-screen bg-neutral-950">
       <TopBar minutesToday={0} />
-      <IconRail currentPage="tasks" />
+      <IconRail currentPage="home" />
       <DashboardGrid>
         <IntentTasksPanel />
       </DashboardGrid>
