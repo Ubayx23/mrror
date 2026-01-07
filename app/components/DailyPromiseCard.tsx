@@ -2,12 +2,15 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { createPromise, getTodayPromise, DailyPromise } from '@/app/utils/storage';
+import PromiseTimerCard from '@/app/components/PromiseTimerCard';
 import { DashboardCard } from './DashboardGrid';
 
 interface DailyPromiseCardProps {
   promise?: DailyPromise | null;
   onPromiseCreated?: (promise: DailyPromise) => void;
   onPromiseChange?: (promise: DailyPromise | null) => void;
+  prefillText?: string;
+  attachTimer?: boolean;
 }
 
 /**
@@ -15,7 +18,7 @@ interface DailyPromiseCardProps {
  * Can display a promise or show creation interface
  * Visually dominant, always at top of layout
  */
-export default function DailyPromiseCard({ promise: externalPromise, onPromiseCreated, onPromiseChange }: DailyPromiseCardProps) {
+export default function DailyPromiseCard({ promise: externalPromise, onPromiseCreated, onPromiseChange, prefillText, attachTimer = false }: DailyPromiseCardProps) {
   const [todayPromise, setTodayPromise] = useState<DailyPromise | null>(() => getTodayPromise());
   const [promiseText, setPromiseText] = useState('');
   const [estimatedMinutes, setEstimatedMinutes] = useState<number | undefined>();
@@ -28,6 +31,13 @@ export default function DailyPromiseCard({ promise: externalPromise, onPromiseCr
   useEffect(() => {
     onPromiseChange?.(displayPromise);
   }, [displayPromise, onPromiseChange]);
+
+  // Apply prefill when provided and no current text
+  useEffect(() => {
+    if (!displayPromise && prefillText && !promiseText) {
+      setPromiseText(prefillText);
+    }
+  }, [displayPromise, prefillText, promiseText]);
 
   const handleCommit = useCallback(() => {
     if (!promiseText.trim()) {
@@ -50,7 +60,7 @@ export default function DailyPromiseCard({ promise: externalPromise, onPromiseCr
 
   if (displayPromise) {
     return (
-      <DashboardCard>
+      <DashboardCard className={displayPromise.state === 'pending' ? 'border-blue-700 shadow-lg' : displayPromise.state === 'completed' ? 'border-emerald-700' : 'border-red-700'}>
         <div className="space-y-4">
           <div className="flex items-baseline justify-between">
             <h3 className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Your Statement</h3>
@@ -83,6 +93,10 @@ export default function DailyPromiseCard({ promise: externalPromise, onPromiseCr
               <span>Resolved {new Date(displayPromise.completedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             )}
           </div>
+
+          {displayPromise.state === 'pending' && attachTimer && (
+            <PromiseTimerCard promise={displayPromise} embedded onTimerComplete={() => {}} onTimerUpdate={() => {}} />
+          )}
         </div>
       </DashboardCard>
     );

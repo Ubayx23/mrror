@@ -10,6 +10,7 @@ interface PromiseTimerCardProps {
   promise: DailyPromise;
   onTimerComplete?: () => void;
   onTimerUpdate?: (display: string, isRunning: boolean) => void;
+  embedded?: boolean; // when true, render without card wrapper for attachment
 }
 
 /**
@@ -17,7 +18,7 @@ interface PromiseTimerCardProps {
  * Timer is no longer the hero - it supports the promise
  * Reduced visual dominance, smaller font sizes, more efficient layout
  */
-export default function PromiseTimerCard({ promise, onTimerComplete, onTimerUpdate }: PromiseTimerCardProps) {
+export default function PromiseTimerCard({ promise, onTimerComplete, onTimerUpdate, embedded = false }: PromiseTimerCardProps) {
   const estimatedSeconds = (promise.estimatedMinutes || 25) * 60;
   const [totalSeconds, setTotalSeconds] = useState(estimatedSeconds);
   const [remainingSeconds, setRemainingSeconds] = useState(estimatedSeconds);
@@ -84,8 +85,7 @@ export default function PromiseTimerCard({ promise, onTimerComplete, onTimerUpda
     setRemainingSeconds(totalSeconds);
   }, [totalSeconds]);
 
-  return (
-    <DashboardCard>
+  const content = (
       <div className="space-y-3">
         {/* Header - stepped down from promise */}
         <div className="flex items-baseline justify-between border-b border-neutral-800 pb-2">
@@ -166,6 +166,17 @@ export default function PromiseTimerCard({ promise, onTimerComplete, onTimerUpda
           </button>
         </div>
       </div>
+  );
+
+  if (embedded) {
+    return (
+      <div className="mt-3 pt-3 border-t border-neutral-800">{content}</div>
+    );
+  }
+
+  return (
+    <DashboardCard>
+      {content}
     </DashboardCard>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import TopBar from '@/app/components/TopBar';
 import IconRail from '@/app/components/IconRail';
 import DashboardGrid from '@/app/components/DashboardGrid';
@@ -10,7 +11,10 @@ import PromiseResolveCard from '@/app/components/PromiseResolveCard';
 import ProofLedger from '@/app/components/ProofLedger';
 import NotesPanel from '@/app/components/NotesPanel';
 import HabitsCard from '@/app/components/HabitsCard';
-import { getTodayPromise, autoFailUnresolvedYesterday, DailyPromise } from '@/app/utils/storage';
+import GoalsPanel from '@/app/components/GoalsPanel';
+import WeeklyCalendar from '@/app/components/WeeklyCalendar';
+import FireStreak from '@/app/components/FireStreak';
+import { getTodayPromise, autoFailUnresolvedYesterday, DailyPromise, isDailyCheckInComplete } from '@/app/utils/storage';
 
 /**
  * Phase 6: Promise-Centric UI
@@ -18,6 +22,14 @@ import { getTodayPromise, autoFailUnresolvedYesterday, DailyPromise } from '@/ap
  * UI communicates: "You are here to keep one word today."
  */
 export default function HomeScreen() {
+  const router = useRouter();
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!isDailyCheckInComplete()) {
+      router.replace('/check-in');
+    }
+  }, [router]);
+
   const [todayPromise, setTodayPromise] = useState<DailyPromise | null>(() => {
     if (typeof window === 'undefined') return null;
     autoFailUnresolvedYesterday();
@@ -70,27 +82,23 @@ export default function HomeScreen() {
       <IconRail currentPage="home" />
 
       <DashboardGrid>
-        {/* Philosophy text - subtle but readable */}
-        <div className="lg:col-span-2 mb-2">
-          <p className="text-sm text-neutral-400 leading-relaxed">
-            Identity changes through completed proof, not intention.
-          </p>
-        </div>
-
         {/* Main content area */}
         {!todayPromise ? (
           // STATE: No promise created yet
           <>
-            {/* Promise input (full width, dominant) */}
-            <div className="lg:col-span-2">
+            {/* Primary Grid: Left Promise (dominant), Right Goals (supportive) */}
+            <div className="lg:col-span-1">
               <DailyPromiseCard
                 promise={null}
                 onPromiseCreated={handlePromiseCreated}
                 onPromiseChange={handlePromiseChange}
               />
             </div>
+            <div className="lg:col-span-1">
+              <GoalsPanel onPrefill={() => {}} />
+            </div>
 
-            {/* Proof Ledger (secondary) */}
+            {/* Proof Ledger (secondary, full width) */}
             <div className="lg:col-span-2">
               <ProofLedger />
             </div>
@@ -98,22 +106,25 @@ export default function HomeScreen() {
             {/* Journal + Habits (bottom row) */}
             <NotesPanel showPrompt="idle" promise={null} />
             <HabitsCard />
+
+            {/* Orientation: Calendar + Fire Streak */}
+            <div className="lg:col-span-1">
+              <WeeklyCalendar />
+            </div>
+            <div className="lg:col-span-1">
+              <FireStreak />
+            </div>
           </>
         ) : todayPromise.state === 'pending' ? (
           // STATE: Promise committed, timer active or waiting
           <>
-            {/* Promise card (always visible, large) */}
-            <div className="lg:col-span-2">
-              <DailyPromiseCard promise={todayPromise} />
+            {/* Promise card (dominant, left) with embedded timer */}
+            <div className="lg:col-span-1">
+              <DailyPromiseCard promise={todayPromise} attachTimer />
             </div>
-
-            {/* Timer (below promise, supporting tool) */}
-            <div className="lg:col-span-2">
-              <PromiseTimerCard
-                promise={todayPromise}
-                onTimerComplete={handleTimerComplete}
-                onTimerUpdate={handleTimerUpdate}
-              />
+            {/* Goals (supportive, right) */}
+            <div className="lg:col-span-1">
+              <GoalsPanel onPrefill={() => {}} />
             </div>
 
             {/* Journal (responsive to promise state) */}
@@ -134,13 +145,25 @@ export default function HomeScreen() {
 
             {/* Habits (optional, secondary) */}
             <HabitsCard />
+
+            {/* Orientation: Calendar + Fire Streak */}
+            <div className="lg:col-span-1">
+              <WeeklyCalendar />
+            </div>
+            <div className="lg:col-span-1">
+              <FireStreak />
+            </div>
           </>
         ) : (
           // STATE: Promise completed or broken
           <>
-            {/* Show completed/failed promise */}
-            <div className="lg:col-span-2">
+            {/* Show completed/failed promise (dominant, left) */}
+            <div className="lg:col-span-1">
               <DailyPromiseCard promise={todayPromise} />
+            </div>
+            {/* Goals (supportive, right) */}
+            <div className="lg:col-span-1">
+              <GoalsPanel onPrefill={() => {}} />
             </div>
 
             {/* Journal (reflection prompt) */}
@@ -166,6 +189,14 @@ export default function HomeScreen() {
 
             {/* Habits card */}
             <HabitsCard />
+
+            {/* Orientation: Calendar + Fire Streak */}
+            <div className="lg:col-span-1">
+              <WeeklyCalendar />
+            </div>
+            <div className="lg:col-span-1">
+              <FireStreak />
+            </div>
           </>
         )}
       </DashboardGrid>

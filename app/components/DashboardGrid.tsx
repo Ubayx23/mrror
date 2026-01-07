@@ -13,24 +13,28 @@ interface DashboardGridProps {
  */
 export default function DashboardGrid({ children }: DashboardGridProps) {
   const now = new Date();
-  const dateStr = now.toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    month: 'long', 
-    day: 'numeric' 
+  const dateStr = now.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric'
   });
-  
-  const hour = now.getHours();
-  let greeting = 'Good evening';
-  if (hour < 12) greeting = 'Good morning';
-  else if (hour < 18) greeting = 'Good afternoon';
+
+  let firstName = 'there';
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = window.localStorage.getItem('mrror-firstName');
+      if (stored) firstName = stored.split(' ')[0];
+    } catch {}
+  }
 
   return (
     <main className="ml-16 mt-14 min-h-screen bg-neutral-950">
       <div className="max-w-6xl mx-auto px-6 py-6">
-        {/* Header: Date + Greeting */}
+        {/* Header: Greeting + Philosophy */}
         <div className="mb-6">
-          <h2 className="text-3xl font-bold text-white mb-1">{greeting}</h2>
-          <p className="text-xs text-neutral-500">{dateStr}</p>
+          <h2 className="text-4xl font-bold text-white mb-2">Hello, {firstName}</h2>
+          <p className="text-lg font-semibold text-white">Identity changes through completed proof, not intention.</p>
+          <p className="text-xs text-neutral-600 mt-2">{dateStr}</p>
         </div>
 
         {/* Grid layout for cards - 2 columns on desktop, dynamic layout */}

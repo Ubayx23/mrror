@@ -170,7 +170,17 @@ export function getAllPromises(): DailyPromise[] {
 export function getTodayPromise(): DailyPromise | null {
   const today = getTodayDate();
   const promises = getAllPromises();
+  // Return the latest (most recent) promise for today if any
   return promises.find(p => p.date === today) || null;
+}
+
+/**
+ * Get today's active (pending) promise if it exists
+ */
+export function getTodayActivePromise(): DailyPromise | null {
+  const today = getTodayDate();
+  const promises = getAllPromises();
+  return promises.find(p => p.date === today && p.state === 'pending') || null;
 }
 
 /**
@@ -191,6 +201,13 @@ export function createPromise(promiseText: string, estimatedMinutes?: number): D
   
   try {
     const today = getTodayDate();
+    const allPromises = getAllPromises();
+
+    // Enforce: only one active promise at a time (no new promise until current resolved)
+    const active = allPromises.find(p => p.date === today && p.state === 'pending');
+    if (active) {
+      return null;
+    }
     const newPromise: DailyPromise = {
       date: today,
       promise: promiseText,
@@ -198,11 +215,9 @@ export function createPromise(promiseText: string, estimatedMinutes?: number): D
       state: 'pending',
       createdAt: new Date().toISOString(),
     };
-    
-    const allPromises = getAllPromises();
-    // Remove any existing promise for today (allows creating a new one)
-    const filtered = allPromises.filter(p => p.date !== today);
-    const updated = [newPromise, ...filtered];
+
+    // Prepend new promise; keep previous same-day resolved promises for history
+    const updated = [newPromise, ...allPromises];
     window.localStorage.setItem(PROMISES_STORAGE_KEY, JSON.stringify(updated));
     
     return newPromise;
@@ -221,7 +236,7 @@ export function completePromise(): DailyPromise | null {
   try {
     const today = getTodayDate();
     const allPromises = getAllPromises();
-    const promiseIndex = allPromises.findIndex(p => p.date === today);
+    const promiseIndex = allPromises.findIndex(p => p.date === today && p.state === 'pending');
     
     if (promiseIndex === -1) return null;
     
@@ -245,7 +260,7 @@ export function failPromise(reason: string): DailyPromise | null {
   try {
     const today = getTodayDate();
     const allPromises = getAllPromises();
-    const promiseIndex = allPromises.findIndex(p => p.date === today);
+    const promiseIndex = allPromises.findIndex(p => p.date === today && p.state === 'pending');
     
     if (promiseIndex === -1) return null;
     
@@ -267,16 +282,40 @@ export function failPromise(reason: string): DailyPromise | null {
 export function getLastSevenDaysPromises(): DailyPromise[] {
   const promises = getAllPromises();
   const result: DailyPromise[] = [];
-  
   for (let i = 0; i < 7; i++) {
     const date = getDateForOffset(-i);
-    const promise = promises.find(p => p.date === date);
-    if (promise) {
-      result.push(promise);
+    const dayPromise = promises.find(p => p.date === date);
+    if (dayPromise) result.push(dayPromise);
+  }
+  return result;
+}
+
+export interface SevenDaySummary {
+  date: string;
+  kept: number;
+  broken: number;
+  pending: number;
+}
+
+/**
+ * Aggregate last 7 days by status counts (supports multiple promises per day)
+ */
+export function getLastSevenDaysSummary(): SevenDaySummary[] {
+  const all = getAllPromises();
+  const map: Record<string, SevenDaySummary> = {};
+  for (let i = 0; i < 7; i++) {
+    const d = getDateForOffset(-i);
+    map[d] = { date: d, kept: 0, broken: 0, pending: 0 };
+  }
+  for (const p of all) {
+    if (p.date in map) {
+      if (p.state === 'completed') map[p.date].kept += 1;
+      else if (p.state === 'failed') map[p.date].broken += 1;
+      else if (p.state === 'pending') map[p.date].pending += 1;
     }
   }
-  
-  return result;
+  // Return in chronological (today back) order
+  return Object.values(map).sort((a, b) => (a.date < b.date ? 1 : -1));
 }
 
 /**
@@ -288,16 +327,112 @@ export function autoFailUnresolvedYesterday(): void {
   try {
     const yesterday = getDateForOffset(-1);
     const allPromises = getAllPromises();
-    const yesterdayIndex = allPromises.findIndex(p => p.date === yesterday);
-    
-    if (yesterdayIndex !== -1 && allPromises[yesterdayIndex].state === 'pending') {
-      allPromises[yesterdayIndex].state = 'failed';
-      allPromises[yesterdayIndex].failureReason = 'Unresolved at end of day';
-      allPromises[yesterdayIndex].completedAt = new Date().toISOString();
-      
+    let changed = false;
+    for (let i = 0; i < allPromises.length; i++) {
+      if (allPromises[i].date === yesterday && allPromises[i].state === 'pending') {
+        allPromises[i].state = 'failed';
+        allPromises[i].failureReason = 'Unresolved at end of day';
+        allPromises[i].completedAt = new Date().toISOString();
+        changed = true;
+      }
+    }
+    if (changed) {
       window.localStorage.setItem(PROMISES_STORAGE_KEY, JSON.stringify(allPromises));
     }
   } catch (error) {
     console.error('Error auto-failing yesterday promise:', error);
+  }
+}
+
+/**
+ * ==========================================================================
+ * Check-in system (mandatory daily gate)
+ * ==========================================================================
+ */
+export interface DailyCheckIn {
+  date: string;            // YYYY-MM-DD
+  kept: boolean;           // Did you act accordingly?
+  message: string;         // Message to self to see next day
+  createdAt: string;       // ISO timestamp
+}
+
+const CHECKIN_STORAGE_KEY = 'mrror-checkins-v1';
+
+function getAllCheckIns(): DailyCheckIn[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(CHECKIN_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as DailyCheckIn[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveAllCheckIns(list: DailyCheckIn[]) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(CHECKIN_STORAGE_KEY, JSON.stringify(list));
+}
+
+export function isDailyCheckInComplete(date?: string): boolean {
+  const d = date ?? getTodayDate();
+  const all = getAllCheckIns();
+  return all.some(c => c.date === d);
+}
+
+export function getYesterdayMessage(): string | '' {
+  const yesterday = getDateForOffset(-1);
+  const all = getAllCheckIns();
+  const y = all.find(c => c.date === yesterday);
+  return y?.message || '';
+}
+
+export function setDailyCheckIn(kept: boolean, message: string): DailyCheckIn {
+  const today = getTodayDate();
+  const all = getAllCheckIns();
+  // idempotent for the day: replace if exists
+  const filtered = all.filter(c => c.date !== today);
+  const item: DailyCheckIn = {
+    date: today,
+    kept,
+    message,
+    createdAt: new Date().toISOString(),
+  };
+  const updated = [item, ...filtered];
+  saveAllCheckIns(updated);
+  return item;
+}
+
+/**
+ * Open tracking for Fire Streak
+ */
+const OPEN_DAYS_KEY = 'mrror-open-days-v1';
+
+export function markOpenedToday(): void {
+  if (typeof window === 'undefined') return;
+  const today = getTodayDate();
+  try {
+    const raw = window.localStorage.getItem(OPEN_DAYS_KEY);
+    const set = raw ? (JSON.parse(raw) as string[]) : [];
+    if (!set.includes(today)) {
+      set.unshift(today);
+      window.localStorage.setItem(OPEN_DAYS_KEY, JSON.stringify(set));
+    }
+  } catch {}
+}
+
+export function getFireStreak(): number {
+  if (typeof window === 'undefined') return 0;
+  try {
+    const raw = window.localStorage.getItem(OPEN_DAYS_KEY);
+    const days = raw ? (JSON.parse(raw) as string[]) : [];
+    if (days.length === 0) return 0;
+    let streak = 0;
+    for (let i = 0; i < days.length; i++) {
+      const expected = getDateForOffset(-i);
+      if (days.includes(expected)) streak += 1; else break;
+    }
+    return streak;
+  } catch {
+    return 0;
   }
 }
