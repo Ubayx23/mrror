@@ -1,12 +1,40 @@
 'use client';
 
 let audioContext: AudioContext | null = null;
+const audioElementCache = new Map<string, HTMLAudioElement>();
+
+function getAudioElement(url: string): HTMLAudioElement {
+  const existing = audioElementCache.get(url);
+  if (existing) return existing;
+  const el = new Audio(url);
+  el.preload = 'auto';
+  audioElementCache.set(url, el);
+  return el;
+}
 
 function getAudioContext(): AudioContext {
   if (!audioContext) {
     audioContext = new AudioContext();
   }
   return audioContext;
+}
+
+/**
+ * Play an audio file from /public. Returns true on success, false on failure.
+ */
+export async function playAudioFile(url: string, volume = 1): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    const audio = getAudioElement(url);
+    audio.currentTime = 0;
+    audio.volume = volume;
+    await audio.play();
+    return true;
+  } catch {
+    audioElementCache.delete(url);
+    return false;
+  }
 }
 
 /**

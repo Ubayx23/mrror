@@ -1,16 +1,16 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { DailyPromise } from '@/app/utils/storage';
 import { DashboardCard } from './DashboardGrid';
-import { playNotificationChime, playAlertChime, createBackgroundTone, stopBackgroundTone, closeAudioContext } from '@/app/utils/audio';
+import { playNotificationChime, playAlertChime, playAudioFile } from '@/app/utils/audio';
 
 const TIMER_PRESETS = [15, 25, 45, 60];
 
 interface PromiseTimerCardProps {
   promise: DailyPromise;
   onTimerComplete?: () => void;
-  onTimerUpdate?: (display: string, isRunning: boolean) => void;
+  onTimerUpdate?: (display: string, isRunning: boolean, elapsedMinutes?: number) => void;
   embedded?: boolean; // when true, render without card wrapper for attachment
   stopSignal?: number; // external signal to stop the timer
 }
@@ -33,8 +33,23 @@ export default function PromiseTimerCard({ promise, onTimerComplete, onTimerUpda
   const [breakRemainingSeconds, setBreakRemainingSeconds] = useState(0);
   const [nextBreakAt, setNextBreakAt] = useState<number | null>(estimatedSeconds > 1800 ? 1800 : null);
 
-  // Audio handling
-  const bgAudioRef = useRef<[OscillatorNode, GainNode] | null>(null);
+  const playStartChime = useCallback(() => {
+    void (async () => {
+      const played = await playAudioFile('/sounds/music.mp3', 0.85);
+      if (!played) {
+        playNotificationChime();
+      }
+    })();
+  }, []);
+
+  const playCalmAlert = useCallback(() => {
+    void (async () => {
+      const played = await playAudioFile('/sounds/alert.mp3', 0.65);
+      if (!played) {
+        playAlertChime();
+      }
+    })();
+  }, []);
 
   // Format time
   const timeLabel = useMemo(() => {
@@ -51,20 +66,6 @@ export default function PromiseTimerCard({ promise, onTimerComplete, onTimerUpda
 
   // Progress percentage
   const progressPercent = ((totalSeconds - remainingSeconds) / totalSeconds) * 100;
-
-  const startBackgroundAudio = useCallback(() => {
-    if (typeof window === 'undefined') return;
-    if (bgAudioRef.current) return; // Already playing
-    bgAudioRef.current = createBackgroundTone();
-  }, []);
-
-  const stopBackgroundAudio = useCallback(() => {
-    if (bgAudioRef.current) {
-      const [osc, gain] = bgAudioRef.current;
-      stopBackgroundTone(osc, gain);
-      bgAudioRef.current = null;
-    }
-  }, []);
 
   // Timer loop
   // Timer loops for focus/break phases
@@ -86,62 +87,59 @@ export default function PromiseTimerCard({ promise, onTimerComplete, onTimerUpda
   // Notify parent of timer state
   // Notify parent of timer state
   useEffect(() => {
-    onTimerUpdate?.(timeLabel, isRunning);
-  }, [timeLabel, isRunning, onTimerUpdate]);
+    const elapsedSeconds = totalSeconds - remainingSeconds;
+    const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+    onTimerUpdate?.(timeLabel, isRunning, elapsedMinutes);
+  }, [timeLabel, isRunning, totalSeconds, remainingSeconds, onTimerUpdate]);
 
   // External stop (e.g., Mark Done clicked)
   // External stop (e.g., Mark Done clicked)
   useEffect(() => {
     if (stopSignal > 0) {
       setIsRunning(false);
-      stopBackgroundAudio();
     }
-  }, [stopSignal, stopBackgroundAudio]);
+  }, [stopSignal]);
 
   // Completion detection
   useEffect(() => {
     if (phase === 'focus' && remainingSeconds === 0 && isRunning) {
       setIsRunning(false);
-      stopBackgroundAudio();
       onTimerComplete?.();
     }
-  }, [phase, remainingSeconds, isRunning, onTimerComplete, stopBackgroundAudio]);
+  }, [phase, remainingSeconds, isRunning, onTimerComplete]);
 
   // Auto break trigger every 30 minutes of focus for sessions > 30 minutes
   useEffect(() => {
     if (phase !== 'focus' || !isRunning || !nextBreakAt) return;
     const elapsed = totalSeconds - remainingSeconds;
     if (elapsed >= nextBreakAt && remainingSeconds > 0) {
-      playAlertChime(); // Alert for break time
+      playCalmAlert(); // Alert for break time
       setPhase('break');
       setBreaksTaken((prev) => {
         const count = prev + 1;
-        const breakMinutes = Math.min(5, 2 + count);
+        const breakMinutes = 5; // Standard pomodoro break
         setBreakRemainingSeconds(breakMinutes * 60);
         return count;
       });
-      stopBackgroundAudio();
-
       const remainingAfterBreak = remainingSeconds;
       const nextCandidate = elapsed + 1800;
       setNextBreakAt(remainingAfterBreak > 1800 ? nextCandidate : null);
     }
-  }, [phase, isRunning, nextBreakAt, totalSeconds, remainingSeconds, stopBackgroundAudio]);
+  }, [phase, isRunning, nextBreakAt, totalSeconds, remainingSeconds, playCalmAlert]);
 
   // Break completion → resume focus
   useEffect(() => {
     if (phase === 'break' && isRunning && breakRemainingSeconds === 0) {
       setPhase('focus');
       setIsRunning(true);
-      startBackgroundAudio();
     }
-  }, [phase, isRunning, breakRemainingSeconds, startBackgroundAudio]);
+  }, [phase, isRunning, breakRemainingSeconds]);
 
   // Five-minute notification
   useEffect(() => {
     if (phase !== 'focus' || !isRunning) return;
     if (remainingSeconds <= 300 && !hasNotifiedFive) {
-      playAlertChime();
+      playCalmAlert();
       setHasNotifiedFive(true);
       if (typeof window !== 'undefined' && 'Notification' in window) {
         if (Notification.permission === 'granted') {
@@ -151,24 +149,17 @@ export default function PromiseTimerCard({ promise, onTimerComplete, onTimerUpda
         }
       }
     }
-  }, [phase, isRunning, remainingSeconds, hasNotifiedFive]);
+  }, [phase, isRunning, remainingSeconds, hasNotifiedFive, playCalmAlert]);
 
   const toggleTimer = useCallback(() => {
     if (!isRunning) {
-      playNotificationChime();
-      if (phase === 'focus') {
-        startBackgroundAudio();
-      } else {
-        stopBackgroundAudio();
-      }
+      playStartChime();
       if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
         Notification.requestPermission();
       }
-    } else {
-      stopBackgroundAudio();
     }
     setIsRunning((prev) => !prev);
-  }, [isRunning, phase, startBackgroundAudio, stopBackgroundAudio]);
+  }, [isRunning, phase, playStartChime]);
 
   const handlePresetClick = useCallback((minutes: number) => {
     if (isRunning) return;
@@ -181,8 +172,7 @@ export default function PromiseTimerCard({ promise, onTimerComplete, onTimerUpda
     setNextBreakAt(seconds > 1800 ? 1800 : null);
     setHasNotifiedFive(seconds <= 300);
     setCustomMinutes('');
-    stopBackgroundAudio();
-  }, [isRunning, stopBackgroundAudio]);
+  }, [isRunning]);
 
   const handleCustomMinutes = useCallback(() => {
     const mins = parseInt(customMinutes);
@@ -196,9 +186,8 @@ export default function PromiseTimerCard({ promise, onTimerComplete, onTimerUpda
       setNextBreakAt(seconds > 1800 ? 1800 : null);
       setHasNotifiedFive(seconds <= 300);
       setCustomMinutes('');
-      stopBackgroundAudio();
     }
-  }, [customMinutes, stopBackgroundAudio]);
+  }, [customMinutes]);
 
   const resetTimer = useCallback(() => {
     setIsRunning(false);
@@ -208,17 +197,9 @@ export default function PromiseTimerCard({ promise, onTimerComplete, onTimerUpda
     setBreaksTaken(0);
     setNextBreakAt(totalSeconds > 1800 ? 1800 : null);
     setHasNotifiedFive(totalSeconds <= 300);
-    stopBackgroundAudio();
-  }, [totalSeconds, stopBackgroundAudio]);
+  }, [totalSeconds]);
 
   // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      stopBackgroundAudio();
-      closeAudioContext();
-    };
-  }, [stopBackgroundAudio]);
-
   // No direct completion from timer; completion happens via Mark Done on promise card
 
   const content = (

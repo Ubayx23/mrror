@@ -124,6 +124,7 @@ export interface DailyPromise {
   date: string;                    // YYYY-MM-DD format
   promise: string;                 // The promise text ("Today I will...")
   estimatedMinutes?: number;       // Optional estimated duration
+  actualMinutes?: number;          // Actual time spent when completed
   state: PromiseState;             // pending, completed, or failed
   failureReason?: string;          // Why the promise failed (1 sentence)
   createdAt: string;               // ISO timestamp
@@ -230,7 +231,7 @@ export function createPromise(promiseText: string, estimatedMinutes?: number): D
 /**
  * Complete today's promise
  */
-export function completePromise(): DailyPromise | null {
+export function completePromise(actualMinutes?: number): DailyPromise | null {
   if (typeof window === 'undefined') return null;
   
   try {
@@ -242,6 +243,9 @@ export function completePromise(): DailyPromise | null {
     
     allPromises[promiseIndex].state = 'completed';
     allPromises[promiseIndex].completedAt = new Date().toISOString();
+    if (actualMinutes !== undefined) {
+      allPromises[promiseIndex].actualMinutes = actualMinutes;
+    }
     
     window.localStorage.setItem(PROMISES_STORAGE_KEY, JSON.stringify(allPromises));
     return allPromises[promiseIndex];
@@ -435,4 +439,14 @@ export function getFireStreak(): number {
   } catch {
     return 0;
   }
+}
+
+/**
+ * Get total minutes focused today from completed promises
+ */
+export function getTodayFocusedMinutes(): number {
+  const today = getTodayDate();
+  const allPromises = getAllPromises();
+  const todayPromises = allPromises.filter(p => p.date === today && p.state === 'completed');
+  return todayPromises.reduce((sum, p) => sum + (p.actualMinutes || 0), 0);
 }

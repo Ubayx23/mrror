@@ -11,7 +11,7 @@ import ProofLedger from '@/app/components/ProofLedger';
 import NotesPanel from '@/app/components/NotesPanel';
 import GoalsPanel from '@/app/components/GoalsPanel';
 // Removed ProductivityChart per request; keep ProofLedger
-import { getTodayPromise, autoFailUnresolvedYesterday, DailyPromise, isDailyCheckInComplete, markOpenedToday } from '@/app/utils/storage';
+import { getTodayPromise, autoFailUnresolvedYesterday, DailyPromise, isDailyCheckInComplete, markOpenedToday, getTodayFocusedMinutes } from '@/app/utils/storage';
 
 /**
  * Phase 6: Promise-Centric UI
@@ -37,6 +37,14 @@ export default function HomeScreen() {
   const [timerDisplay, setTimerDisplay] = useState('');
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [showResolve, setShowResolve] = useState(false);
+  const [minutesFocused, setMinutesFocused] = useState(0);
+
+  // Update minutes focused when component mounts and when promises change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setMinutesFocused(getTodayFocusedMinutes());
+    }
+  }, [todayPromise]);
 
   const handlePromiseCreated = useCallback((promise: DailyPromise) => {
     setTodayPromise(promise);
@@ -68,7 +76,7 @@ export default function HomeScreen() {
         activeTaskName={todayPromise?.promise}
         timerDisplay={timerDisplay || undefined}
         isTimerRunning={isTimerRunning}
-        minutesToday={0}
+        minutesToday={minutesFocused}
       />
       
       <IconRail currentPage="home" />

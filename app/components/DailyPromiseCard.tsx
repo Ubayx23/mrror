@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { createPromise, getTodayPromise, DailyPromise, completePromise } from '@/app/utils/storage';
 import PromiseTimerCard from '@/app/components/PromiseTimerCard';
 import { DashboardCard } from './DashboardGrid';
@@ -26,6 +26,7 @@ export default function DailyPromiseCard({ promise: externalPromise, onPromiseCr
   const [estimatedMinutes, setEstimatedMinutes] = useState<number | undefined>();
   const [error, setError] = useState('');
   const [stopSignal, setStopSignal] = useState(0);
+  const elapsedMinutesRef = useRef(0);
 
   // Use external promise if explicitly provided (including null)
   // Otherwise fall back to internal state
@@ -101,13 +102,14 @@ export default function DailyPromiseCard({ promise: externalPromise, onPromiseCr
             <button
               onClick={() => {
                 playSuccessChime();
-                const updated = completePromise();
+                const updated = completePromise(elapsedMinutesRef.current);
                 if (updated) {
                   setTodayPromise(updated);
                   onPromiseChange?.(updated);
                   // Also stop any running timer
                   setStopSignal((s) => s + 1);
                   onMarkDone?.();
+                  elapsedMinutesRef.current = 0;
                 }
               }}
               className="w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-medium transition text-sm"
@@ -121,7 +123,11 @@ export default function DailyPromiseCard({ promise: externalPromise, onPromiseCr
               promise={displayPromise} 
               embedded 
               onTimerComplete={() => {}} 
-              onTimerUpdate={() => {}} 
+              onTimerUpdate={(display, isRunning, elapsedMinutes) => {
+                if (elapsedMinutes !== undefined) {
+                  elapsedMinutesRef.current = elapsedMinutes;
+                }
+              }} 
               stopSignal={stopSignal}
             />
           )}
